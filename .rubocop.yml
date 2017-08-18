@@ -21,9 +21,6 @@ Metrics/BlockLength:
 Style/MethodDefParentheses:
   EnforcedStyle: require_parentheses
 
-Style/MethodCallWithArgsParentheses:
-  Enabled: true
-
 Style/CollectionMethods:
   Enabled: true
   PreferredMethods:
@@ -42,4 +39,4 @@ Style/Documentation:
   Enabled: false
 
 RSpec/NestedGroups:
-  MaxNesting: 5
+  Max: 5
