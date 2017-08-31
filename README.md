@@ -1,10 +1,9 @@
-# Scnnr Ruby
-Official #CBK scnnr client library for Ruby.
+# Official #CBK scnnr client library for Ruby.
 
 ## Installation
 ### Bundler
 ```
-gem 'scnnr', '~> 0.1'
+gem 'scnnr'
 ```
 
 ### Manual
@@ -43,8 +42,9 @@ Request image recognition by a binary image.
 img = File.open('dummy_image_file', 'rb')
 recognition = client.recognize_image(img)
 ```
-`recognition` instance represents the image recognition result from API.
-If the recognition succeeds, returned `recognition` whose state is `finished`.
+
+`Recognition` class represents the image recognition result from API.
+If the recognition processing is completed, you will get `Recognition` instance whose state is `finished`.
 
 ```
 recognition.finished?
@@ -80,9 +80,9 @@ recognition.to_h
  "state"=>"finished"}
 ```
 
-If the timeout value is zero, returned `recognition` whose state is `queued`.
+If the timeout value is zero or `nil`, you will get `Recognition` instance whose state is `queued`.
 
-Then you can request again using `client#fetch`.
+Then you can fetch the recognition result using `Scnnr::Client#fetch`.
 
 ```
 recognition.queued?
@@ -98,21 +98,28 @@ recognition.finished?
 
 ### Error handling
 
-If the recognition processing does not end within the timeout time or the recognition failed,
-returned an error with `recognition` whose state is `queued`.
+If the recognition processing is not completed within the timeout time or the recognition failed,
+you will get an error with `Recognition` instance.
 
 ```
 begin
   url = 'https://example.com/dummy.jpg'
-  recognition = client.recognize_url(url)
-rescue Scnnr::Errors::RecognitionFailed, Scnnr::Errors::TimeoutError => e
-  # You can request again just like when the timeout value is zero.
-  recognition = client.fetch(e.recognition.id)
-  recognition.finished?
-  => true
-rescue Scnnr::Errors::RequestFailed => e
-  # Network communication with scnnr API failed.
+  recognition = client.recognize_url(url, timeout: 10)
+rescue Scnnr::TimeoutError => e
+  # You can fetch the result just like when the timeout value is zero or nil.
+  recognition = client.fetch(e.recognition.id, timeout: 10)
+  recognition.finished? # => true or false
+rescue Scnnr::RecognitionFailed => e
+  # Failed to recognize the image you requested.
+  recognition = e.recognition
+  recognition.error? # => true
+  STDERR.puts "[ERROR] #{e.title}: #{e.detail} (e.type)"
+rescue Scnnr::RequestFailed => e
+  # Failed to reserve the recognition.
+  # This kind of errors has no `#recognition` field.
+  STDERR.puts "[ERROR] #{e.title}: #{e.detail} (e.type)"
 rescue => e
-  # An error not related to the scnnr API occurred.
+  # Unexpected error.
+  raise
 end
 ```
