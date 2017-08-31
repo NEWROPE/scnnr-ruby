@@ -1,0 +1,42 @@
+require:
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 2.4
+
+Metrics/LineLength:
+  Max: 120
+
+Metrics/ClassLength:
+  Max: 300
+
+Metrics/BlockLength:
+  Max: 25
+  Exclude:
+    - 'Rakefile'
+    - '**/*.rake'
+    - 'spec/**/*.rb'
+    - 'scnnr.gemspec'
+
+Style/MethodDefParentheses:
+  EnforcedStyle: require_parentheses
+
+Style/CollectionMethods:
+  Enabled: true
+  PreferredMethods:
+    reduce: inject
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: no_comma
+
+Style/TrailingCommaInLiteral:
+  EnforcedStyleForMultiline: comma
+
+Style/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Style/Documentation:
+  Enabled: false
+
+RSpec/NestedGroups:
+  Max: 5
