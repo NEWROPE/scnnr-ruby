@@ -33,7 +33,7 @@ url = 'https://example.com/dummy.jpg'
 recognition = client.recognize_url(url)
 
 # you can override config.timeout.
-recognition = client.recognize_url(url, { timeout: 10 })
+recognition = client.recognize_url(url, timeout: 10)
 ```
 
 Request image recognition by a binary image.
@@ -91,7 +91,7 @@ recognition.queued?
 recognition.to_h
 => {"id"=>"20170829/ed4c674c-7970-4e9c-9b26-1b6076b36b49", "state"=>"queued"}
 
-recognition = client.fetch(recognition.id)
+recognition = client.fetch(recognition)
 recognition.finished?
 => true
 ```
@@ -107,7 +107,7 @@ begin
   recognition = client.recognize_url(url, timeout: 10)
 rescue Scnnr::TimeoutError => e
   # You can fetch the result just like when the timeout value is zero or nil.
-  recognition = client.fetch(e.recognition.id, timeout: 10)
+  recognition = client.fetch(e.recognition, timeout: 10)
   recognition.finished? # => true or false
 rescue Scnnr::RecognitionFailed => e
   # Failed to recognize the image you requested.
@@ -116,7 +116,7 @@ rescue Scnnr::RecognitionFailed => e
   STDERR.puts "[ERROR] #{e.title}: #{e.detail} (e.type)"
 rescue Scnnr::RequestFailed => e
   # Failed to reserve the recognition.
-  # This kind of errors has no `#recognition` field.
+  # This kind of errors have no `#recognition` field.
   STDERR.puts "[ERROR] #{e.title}: #{e.detail} (e.type)"
 rescue => e
   # Unexpected error.
