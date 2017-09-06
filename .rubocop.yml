@@ -32,11 +32,14 @@ Style/TrailingCommaInArguments:
 Style/TrailingCommaInLiteral:
   EnforcedStyleForMultiline: comma
 
-Style/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
-
 Style/Documentation:
   Enabled: false
+
+Style/RedundantSelf:
+  Enabled: false
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
 
 RSpec/NestedGroups:
   Max: 5

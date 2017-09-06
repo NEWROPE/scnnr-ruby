@@ -33,7 +33,7 @@ url = 'https://example.com/dummy.jpg'
 recognition = client.recognize_url(url)
 
 # you can override config.timeout.
-recognition = client.recognize_url(url, { timeout: 10 })
+recognition = client.recognize_url(url, timeout: 10)
 ```
 
 Request image recognition by a binary image.
@@ -116,7 +116,7 @@ rescue Scnnr::RecognitionFailed => e
   STDERR.puts "[ERROR] #{e.title}: #{e.detail} (e.type)"
 rescue Scnnr::RequestFailed => e
   # Failed to reserve the recognition.
-  # This kind of errors has no `#recognition` field.
+  # This kind of errors have no `#recognition` field.
   STDERR.puts "[ERROR] #{e.title}: #{e.detail} (e.type)"
 rescue => e
   # Unexpected error.
