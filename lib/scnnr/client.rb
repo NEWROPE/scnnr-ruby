@@ -21,14 +21,19 @@ module Scnnr
     end
 
     def fetch(recognition_id, options = {})
-      return request(recognition_id, options[:timeout]) if options.delete(:polling) == false
-      options = self.config.to_h.merge(options)
+      return request(recognition_id, options) if options.delete(:polling) == false
+      options = merge_options(options)
       Request.new(options.delete(:timeout)).polling(self, recognition_id, options)
     end
 
     private
 
-    def request(recognition_id, timeout)
+    def merge_options(options = {})
+      self.config.to_h.merge(options)
+    end
+
+    def request(recognition_id, options = {})
+      # options = merge_options(options)
       # TODO: request to API using ID
       # return recognition instance
     end
