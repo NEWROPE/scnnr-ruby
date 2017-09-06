@@ -3,7 +3,7 @@
 module Scnnr
   class Client
     def initialize
-      yield(config)
+      yield(self.config)
     end
 
     def config
@@ -22,7 +22,7 @@ module Scnnr
 
     def fetch(recognition_id, options = {})
       return request(recognition_id, options[:timeout]) if options.delete(:polling) == false
-      options = config.to_h.merge(options)
+      options = self.config.to_h.merge(options)
       Request.new(options.delete(:timeout)).polling(self, recognition_id, options)
     end
 
