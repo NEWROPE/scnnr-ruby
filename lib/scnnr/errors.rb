@@ -1,25 +1,24 @@
 # frozen_string_literal: true
 
 module Scnnr
-  class RequestFailed < StandardError
+  class Error < StandardError
     attr_accessor :detail, :title, :type
-
-    def initialize(message = nil)
-      super(message)
-      @detail = 'Failed to reserve the recognition'
-      @title = 'Request Failed'
-      @type = 'request-failed'
-    end
-  end
-
-  class RecognitionFailed < StandardError
-    attr_accessor :detail, :title, :type, :recognition
 
     def initialize(message = nil, attrs = {})
       super(message)
       @detail = attrs[:detail]
       @title = attrs[:title]
       @type = attrs[:type]
+    end
+  end
+
+  class RequestFailed < Error; end
+
+  class RecognitionFailed < Error
+    attr_accessor :recognition
+
+    def initialize(message = nil, attrs = {})
+      super(message, attrs)
       @recognition = attrs[:recognition]
     end
   end

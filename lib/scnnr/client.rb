@@ -11,20 +11,26 @@ module Scnnr
     end
 
     def recognize_image(image, options = {})
-      fetch(Recognition.new(image: image), config.to_h.merge(options))
+      # TODO: request to API using image
+      # return recognition instance
     end
 
     def recognize_url(url, options = {})
-      fetch(Recognition.new(url: url), config.to_h.merge(options))
+      # TODO: request to API using url
+      # return recognition instance
     end
 
-    def fetch(recognition, options = {})
-      req = Request.new(config.to_h.merge(options))
-      while req.remain_timeout?
-        recognition = req.request!(recognition)
-        break recognition if recognition.finished?
-      end
-      recognition
+    def fetch(recognition_id, options = {})
+      return request(recognition_id, options[:timeout]) if options.delete(:polling) == false
+      options = config.to_h.merge(options)
+      Request.new(options.delete(:timeout)).polling(self, recognition_id, options)
+    end
+
+    private
+
+    def request(recognition_id, timeout)
+      # TODO: request to API using ID
+      # return recognition instance
     end
   end
 end
