@@ -4,7 +4,7 @@ module Scnnr
   class Error < StandardError
     attr_accessor :detail, :title, :type
 
-    def initialize(message = nil, attrs = {})
+    def initialize(message, attrs = {})
       super(message)
       @detail = attrs['detail']
       @title = attrs['title']
@@ -17,18 +17,27 @@ module Scnnr
   class RecognitionFailed < Error
     attr_accessor :recognition
 
-    def initialize(message = nil, attrs = {})
-      super(message, attrs)
-      @recognition = attrs['recognition']
+    def initialize(message, recognition)
+      super(message, recognition.error)
+      @recognition = recognition
     end
   end
 
   class TimeoutError < StandardError
     attr_accessor :recognition
 
-    def initialize(message = nil, attrs = {})
+    def initialize(message, recognition)
       super(message)
-      @recognition = attrs['recognition']
+      @recognition = recognition
+    end
+  end
+
+  class UnsupportedError < StandardError
+    attr_accessor :response
+
+    def initialize(response)
+      super(response.body)
+      @response = response
     end
   end
 end

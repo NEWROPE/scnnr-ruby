@@ -2,12 +2,13 @@
 
 module Scnnr
   class Recognition
-    attr_reader :id, :objects, :state
+    attr_reader :id, :objects, :state, :error
 
     def initialize(attrs = {})
       @id = attrs['id']
       @objects = (attrs['objects'] || []).map { |obj| Object.new(obj) }
       @state = attrs['state']&.intern
+      @error = attrs['error']
     end
 
     def queued?

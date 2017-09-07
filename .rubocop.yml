@@ -41,5 +41,11 @@ Style/RedundantSelf:
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
 
+Layout/IndentHash:
+  EnforcedStyle: consistent
+
+Style/BracesAroundHashParameters:
+  Enabled: false
+
 RSpec/NestedGroups:
   Max: 5

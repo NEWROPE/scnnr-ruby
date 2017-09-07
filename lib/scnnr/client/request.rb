@@ -14,14 +14,12 @@ module Scnnr
       end
 
       def polling(client, recognition_id, options = {})
-        # TODO: construct url
-        while remain_timeout?
+        loop do
           timeout = [@timeout, MAX_TIMEOUT].min
           @timeout -= timeout
           recognition = client.fetch(recognition_id, options.merge(timeout: timeout, polling: false))
-          break recognition if recognition.finished?
+          break recognition if recognition.finished? || !self.remain_timeout?
         end
-        recognition
       end
     end
   end

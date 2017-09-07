@@ -33,12 +33,4 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'bundler', '~> 1.15'
-  spec.add_development_dependency 'rake', '~> 10.0'
-  spec.add_development_dependency 'rspec', '~> 3.5'
-  spec.add_development_dependency 'rspec_junit_formatter', '~> 0.3'
-  spec.add_development_dependency 'rubocop-junit-formatter', '~> 0.1'
-
-  spec.add_development_dependency 'rubocop', '~> 0.49'
-  spec.add_development_dependency 'rubocop-rspec', '~> 1.15'
-  spec.add_development_dependency 'pry', '~> 0.10'
 end
