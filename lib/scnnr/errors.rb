@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Scnnr
-  class RequestFailed < StandardError
+  class Error < StandardError
     attr_accessor :detail, :title, :type
 
     def initialize(message = nil, attrs = {})
@@ -12,14 +12,13 @@ module Scnnr
     end
   end
 
-  class RecognitionFailed < StandardError
-    attr_accessor :detail, :title, :type, :recognition
+  class RequestFailed < Error; end
+
+  class RecognitionFailed < Error
+    attr_accessor :recognition
 
     def initialize(message = nil, attrs = {})
-      super(message)
-      @detail = attrs['detail']
-      @title = attrs['title']
-      @type = attrs['type']
+      super(message, attrs)
       @recognition = attrs['recognition']
     end
   end
