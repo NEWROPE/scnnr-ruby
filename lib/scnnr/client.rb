@@ -18,27 +18,14 @@ module Scnnr
     def recognize_image(image, options = {})
       options = merge_options(options)
       uri = construct_uri('recognitions', options)
-      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
-        request = Net::HTTP::Post.new(uri.request_uri, {
-          'Content-Type' => 'application/octet-stream', 'x-api-key' => options[:api_key],
-          'Transfer-Encoding' => 'chunked'
-        }).tap { |req| req.body_stream = image }
-        options[:logger].info("Started POST #{uri.request_uri}")
-        http.request(request)
-      end
+      response = send_image(image, uri, options)
       handle_response(response, options)
     end
 
     def recognize_url(url, options = {})
       options = merge_options(options)
       uri = construct_uri('remote/recognitions', options)
-      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
-        request = Net::HTTP::Post.new(uri.request_uri, {
-          'Content-Type' => 'application/json', 'x-api-key' => options[:api_key]
-        }).tap { |req| req.body = { url: url }.to_json }
-        options[:logger].info("Started POST #{uri.request_uri}")
-        http.request(request)
-      end
+      response = send_url(url, uri, options)
       handle_response(response, options)
     end
 
@@ -69,18 +56,36 @@ module Scnnr
       handle_response(response, options)
     end
 
+    def send_image(image, uri, options = {})
+      Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+        request = Net::HTTP::Post.new(uri.request_uri, {
+          'Content-Type' => 'application/octet-stream', 'x-api-key' => options[:api_key],
+          'Transfer-Encoding' => 'chunked'
+        })
+        request.body_stream = image
+        options[:logger].info("Started POST #{uri.request_uri}")
+        http.request(request)
+      end
+    end
+
+    def send_url(url, uri, options = {})
+      Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+        request = Net::HTTP::Post.new(uri.request_uri, {
+          'Content-Type' => 'application/json', 'x-api-key' => options[:api_key]
+        })
+        request.body = { url: url }.to_json
+        options[:logger].info("Started POST #{uri.request_uri}")
+        http.request(request)
+      end
+    end
+
     def handle_response(response, options = {})
       case response
       when Net::HTTPSuccess
         recognition = Recognition.new(JSON.parse(response.body))
         handle_recognition(recognition, options)
-      when Net::HTTPUnprocessableEntity
-        if response.content_type == 'application/jp.cubki.scnnr.v1+json'
-          raise Scnnr::RequestFailed.new('failed to reserve the recognition', JSON.parse(response.body))
-        end
-        raise UnsupportedError, response
       else
-        raise UnsupportedError, response
+        handle_error(response)
       end
     end
 
@@ -90,6 +95,13 @@ module Scnnr
       end
       raise Scnnr::RecognitionFailed.new('recognition failed', recognition) if recognition.error?
       recognition
+    end
+
+    def handle_error(response)
+      if response.content_type == 'application/jp.cubki.scnnr.v1+json'
+        raise Scnnr::RequestFailed.new('failed to reserve the recognition', JSON.parse(response.body))
+      end
+      raise UnsupportedError, response
     end
   end
 end

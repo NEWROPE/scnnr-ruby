@@ -92,9 +92,7 @@ RSpec.describe Scnnr::Client do
     let(:parsed_body) { JSON.parse(expected_body) }
 
     it do
-      begin
-        expect { subject }.to raise_error Scnnr::RecognitionFailed
-      rescue Scnnr::RecognitionFailed => e
+      expect { subject }.to raise_error(Scnnr::RecognitionFailed) do |e|
         expect(e.recognition).to be_a Scnnr::Recognition
         expect(e.recognition.id).to eq parsed_body['id']
         expect(e.recognition.objects.map(&:to_h)).to match_array parsed_body['objects']
@@ -107,16 +105,14 @@ RSpec.describe Scnnr::Client do
       stub_request(method, client.send(:construct_uri, path, options).to_s).to_return(
         body: expected_body,
         headers: { 'Content-Type' => 'application/jp.cubki.scnnr.v1+json' },
-        status: 422,
+        status: 422
       )
     end
     let(:expected_body) { fixture('request_failed.json').read }
     let(:parsed_body) { JSON.parse(expected_body) }
 
     it do
-      begin
-        expect { subject }.to raise_error Scnnr::RequestFailed
-      rescue Scnnr::RequestFailed => e
+      expect { subject }.to raise_error(Scnnr::RequestFailed) do |e|
         expect(e.type).to eq parsed_body['type']
         expect(e.title).to eq parsed_body['title']
         expect(e.detail).to eq parsed_body['detail']
