@@ -8,7 +8,7 @@ module Scnnr
     ENDPOINT_BASE = 'https://api.scnnr.cubki.jp'
 
     def initialize
-      yield(self.config)
+      yield(self.config) if block_given?
     end
 
     def config
@@ -18,21 +18,23 @@ module Scnnr
     def recognize_image(image, options = {})
       options = merge_options(options)
       uri = construct_uri('recognitions', options)
-      response = send_image(image, uri, options)
+      # TODO: Use PollingManager to be accepted timeout > 25
+      response = post_connection(uri, options).send_stream(image)
       handle_response(response, options)
     end
 
     def recognize_url(url, options = {})
       options = merge_options(options)
       uri = construct_uri('remote/recognitions', options)
-      response = send_url(url, uri, options)
+      # TODO: Use PollingManager to be accepted timeout > 25
+      response = post_connection(uri, options).send_json({ url: url })
       handle_response(response, options)
     end
 
     def fetch(recognition_id, options = {})
       return request(recognition_id, options) if options.delete(:polling) == false
       options = merge_options(options)
-      Request.new(options.delete(:timeout)).polling(self, recognition_id, options)
+      PollingManager.new(options.delete(:timeout)).polling(self, recognition_id, options)
     end
 
     private
@@ -46,62 +48,24 @@ module Scnnr
       URI.parse("#{ENDPOINT_BASE}/#{options[:api_version]}/#{path}?timeout=#{options[:timeout]}")
     end
 
+    def get_connection(uri, options = {})
+      Connection.new(uri, :get, nil, options[:logger])
+    end
+
+    def post_connection(uri, options = {})
+      Connection.new(uri, :post, options[:api_key], options[:logger])
+    end
+
     def request(recognition_id, options = {})
       options = merge_options(options)
       uri = construct_uri("recognitions/#{recognition_id}", options)
-      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
-        options[:logger].info("Started GET #{uri.request_uri}")
-        http.get(uri.request_uri)
-      end
+      response = get_connection(uri, options).send_request
       handle_response(response, options)
     end
 
-    def send_image(image, uri, options = {})
-      Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
-        request = Net::HTTP::Post.new(uri.request_uri, {
-          'Content-Type' => 'application/octet-stream', 'x-api-key' => options[:api_key],
-          'Transfer-Encoding' => 'chunked'
-        })
-        request.body_stream = image
-        options[:logger].info("Started POST #{uri.request_uri}")
-        http.request(request)
-      end
-    end
-
-    def send_url(url, uri, options = {})
-      Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
-        request = Net::HTTP::Post.new(uri.request_uri, {
-          'Content-Type' => 'application/json', 'x-api-key' => options[:api_key]
-        })
-        request.body = { url: url }.to_json
-        options[:logger].info("Started POST #{uri.request_uri}")
-        http.request(request)
-      end
-    end
-
     def handle_response(response, options = {})
-      case response
-      when Net::HTTPSuccess
-        recognition = Recognition.new(JSON.parse(response.body))
-        handle_recognition(recognition, options)
-      else
-        handle_error(response)
-      end
-    end
-
-    def handle_recognition(recognition, options = {})
-      if recognition.queued? && options[:timeout].positive?
-        raise Scnnr::TimeoutError.new('recognition timed out', recognition)
-      end
-      raise Scnnr::RecognitionFailed.new('recognition failed', recognition) if recognition.error?
-      recognition
-    end
-
-    def handle_error(response)
-      if response.content_type == 'application/jp.cubki.scnnr.v1+json'
-        raise Scnnr::RequestFailed.new('failed to reserve the recognition', JSON.parse(response.body))
-      end
-      raise UnsupportedError, response
+      response = Response.new(response, options[:timeout].positive?)
+      response.build_recognition
     end
   end
 end

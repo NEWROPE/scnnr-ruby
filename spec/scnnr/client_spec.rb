@@ -16,7 +16,12 @@ RSpec.describe Scnnr::Client do
   let(:api_version) { 'v1' }
   let(:timeout) { 0 }
   let(:logger) { Logger.new(STDOUT) }
-  let(:logger_level) { :info }
+  let(:logger_level) { :warn }
+
+  before do
+    stub.any_instance_of(Net::HTTPResponse).body { fixture('queued_recognition.json') }
+    stub.any_instance_of(Net::HTTPResponse).content_type { Scnnr::Response::SUPPORTED_CONTENT_TYPE }
+  end
 
   describe '#config' do
     subject { client.config }
@@ -30,217 +35,48 @@ RSpec.describe Scnnr::Client do
     end
   end
 
-  shared_examples_for 'a queued recognition instance is created correctly' do
-    before do
-      stub_request(:post, client.send(:construct_uri, path, options).to_s)
-        .to_return(body: expected_body, status: 200)
-    end
-    let(:expected_body) { fixture('queued_recognition.json').read }
-    let(:parsed_body) { JSON.parse(expected_body) }
-
-    it do
-      expect { subject }.not_to raise_error
-      is_expected.to be_a Scnnr::Recognition
-      is_expected.to be_queued
-      expect(subject.id).to eq parsed_body['id']
-      expect(subject.objects).to be_empty
-    end
-  end
-
-  shared_examples_for 'a finished recognition instance is created correctly' do
-    before do
-      stub_request(method, client.send(:construct_uri, path, options).to_s)
-        .to_return(body: expected_body, status: 200)
-    end
-    let(:expected_body) { fixture('finished_recognition.json').read }
-    let(:parsed_body) { JSON.parse(expected_body) }
-
-    it do
-      expect { subject }.not_to raise_error
-      is_expected.to be_a Scnnr::Recognition
-      is_expected.to be_finished
-      expect(subject.id).to eq parsed_body['id']
-      expect(subject.objects.map(&:to_h)).to match_array parsed_body['objects']
-    end
-  end
-
-  shared_examples_for 'a recognition timed out' do
-    before do
-      stub_request(method, client.send(:construct_uri, path, options).to_s)
-        .to_return(body: expected_body, status: 200)
-    end
-    let(:expected_body) { fixture('queued_recognition.json').read }
-    let(:parsed_body) { JSON.parse(expected_body) }
-
-    it do
-      begin
-        expect { subject }.to raise_error Scnnr::TimeoutError
-      rescue Scnnr::TimeoutError => e
-        expect(e.recognition).to be_a Scnnr::Recognition
-        expect(e.recognition.id).to eq parsed_body['id']
-        expect(e.recognition.objects.map(&:to_h)).to match_array parsed_body['objects']
-      end
-    end
-  end
-
-  shared_examples_for 'a recognition failed' do
-    before do
-      stub_request(method, client.send(:construct_uri, path, options).to_s)
-        .to_return(body: expected_body, status: 200)
-    end
-    let(:expected_body) { fixture('recognition_failed.json').read }
-    let(:parsed_body) { JSON.parse(expected_body) }
-
-    it do
-      expect { subject }.to raise_error(Scnnr::RecognitionFailed) do |e|
-        expect(e.recognition).to be_a Scnnr::Recognition
-        expect(e.recognition.id).to eq parsed_body['id']
-        expect(e.recognition.objects.map(&:to_h)).to match_array parsed_body['objects']
-      end
-    end
-  end
-
-  shared_examples_for 'a request failed' do
-    before do
-      stub_request(method, client.send(:construct_uri, path, options).to_s).to_return(
-        body: expected_body,
-        headers: { 'Content-Type' => 'application/jp.cubki.scnnr.v1+json' },
-        status: 422
-      )
-    end
-    let(:expected_body) { fixture('request_failed.json').read }
-    let(:parsed_body) { JSON.parse(expected_body) }
-
-    it do
-      expect { subject }.to raise_error(Scnnr::RequestFailed) do |e|
-        expect(e.type).to eq parsed_body['type']
-        expect(e.title).to eq parsed_body['title']
-        expect(e.detail).to eq parsed_body['detail']
-      end
-    end
-  end
-
   describe '#recognize_image' do
     subject { client.recognize_image(image, options) }
 
-    let(:method) { :post }
-    let(:path) { 'recognitions' }
+    let(:image) { fixture('images/sample.png') }
+    let(:uri) { client.send(:construct_uri, 'recognitions', options) }
+    let(:options) { {} }
 
-    context 'when a provided image is valid' do
-      let(:image) { fixture('images/sample.png') }
-
-      context 'and timeout is 0 or nil' do
-        let(:options) { {} }
-
-        it_behaves_like 'a queued recognition instance is created correctly'
-      end
-
-      context 'and timeout is more then 0' do
-        let(:options) { { timeout: rand(1..25) } }
-
-        context 'and a recognition finishes in time' do
-          it_behaves_like 'a finished recognition instance is created correctly'
-        end
-
-        context 'and a recognition does not finish in time' do
-          it_behaves_like 'a recognition timed out'
-        end
-      end
+    before do
+      mock.proxy(Scnnr::Connection).new.with(uri, :post, is_a(String), is_a(Logger))
+      mock.any_instance_of(Scnnr::Connection).send_stream.with(image) { Net::HTTPResponse.new(nil, nil, nil) }
+      mock.any_instance_of(Scnnr::Response).build_recognition
     end
-
-    context 'when a provided image is invalid' do
-      let(:image) { nil }
-      let(:options) { { timeout: rand(0..25) } }
-
-      it_behaves_like 'a request failed'
-    end
+    it { subject }
   end
 
   describe '#recognize_url' do
     subject { client.recognize_url(url, options) }
 
-    let(:method) { :post }
-    let(:path) { 'remote/recognitions' }
+    let(:url) { 'https://example.com/dummy.jpg' }
+    let(:uri) { client.send(:construct_uri, 'remote/recognitions', options) }
+    let(:options) { {} }
 
-    context 'when a provided url is valid' do
-      let(:url) { 'https://example.com/dummy.jpg' }
-
-      context 'and timeout is 0 or nil' do
-        let(:options) { {} }
-
-        it_behaves_like 'a queued recognition instance is created correctly'
-      end
-
-      context 'and timeout is more then 0' do
-        let(:options) { { timeout: rand(1..25) } }
-
-        context 'and a recognition finishes in time' do
-          it_behaves_like 'a finished recognition instance is created correctly'
-        end
-        context 'and a recognition does not finish in time' do
-          it_behaves_like 'a recognition timed out'
-        end
-      end
+    before do
+      mock.proxy(Scnnr::Connection).new.with(uri, :post, is_a(String), is_a(Logger))
+      mock.any_instance_of(Scnnr::Connection).send_json.with({ url: url }) { Net::HTTPResponse.new(nil, nil, nil) }
+      mock.any_instance_of(Scnnr::Response).build_recognition
     end
-
-    context 'when a provided url is invalid' do
-      let(:url) { 'https://example.com/dummy.pdf' }
-
-      context 'and timeout is 0 or nil' do
-        let(:options) { {} }
-
-        it_behaves_like 'a queued recognition instance is created correctly'
-      end
-
-      context 'and timeout is more then 0' do
-        let(:options) { { timeout: rand(1..25) } }
-
-        context 'and a recognition finishes in time' do
-          it_behaves_like 'a recognition failed'
-        end
-
-        context 'and a recognition does not finish in time' do
-          it_behaves_like 'a recognition timed out'
-        end
-      end
-    end
+    it { subject }
   end
 
   describe '#fetch' do
     subject { client.fetch(recognition_id, options) }
 
-    let(:recognition_id) { '20170829/ed4c674c-7970-4e9c-9b26-1b6076b36b49' }
-    let(:method) { :get }
-    let(:path) { "recognitions/#{recognition_id}" }
+    let(:uri) { client.send(:construct_uri, "recognitions/#{recognition_id}", options) }
+    let(:recognition_id) { 'dummy_id' }
+    let(:options) { {} }
 
-    context 'when a reserved recognition is valid' do
-      before do
-        mock.proxy.any_instance_of(Scnnr::Client::Request).polling.with(client, recognition_id, is_a(Hash))
-        mock.proxy(client).request.with(recognition_id, is_a(Hash))
-      end
-
-      context 'and timeout is 0 or nil' do
-        let(:options) { {} }
-
-        it_behaves_like 'a finished recognition instance is created correctly'
-      end
-
-      context 'and timeout is more then 0' do
-        let(:options) { { timeout: rand(1..25) } }
-
-        context 'and a recognition finishes in time' do
-          it_behaves_like 'a finished recognition instance is created correctly'
-        end
-        context 'and a recognition does not finish in time' do
-          it_behaves_like 'a recognition timed out'
-        end
-      end
+    before do
+      mock.proxy.any_instance_of(Scnnr::PollingManager).polling(client, recognition_id, is_a(Hash))
+      mock.any_instance_of(Scnnr::Connection).send_request { Net::HTTPResponse.new(nil, nil, nil) }
+      mock.any_instance_of(Scnnr::Response).build_recognition { Scnnr::Recognition.new }
     end
-
-    context 'when a reserved recognition is invalid' do
-      let(:options) { { timeout: rand(0..25) } }
-
-      it_behaves_like 'a recognition failed'
-    end
+    it { subject }
   end
 end

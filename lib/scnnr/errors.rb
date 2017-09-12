@@ -4,7 +4,7 @@ module Scnnr
   class Error < StandardError
     attr_accessor :detail, :title, :type
 
-    def initialize(message, attrs = {})
+    def initialize(message, attrs)
       super(message)
       @detail = attrs['detail']
       @title = attrs['title']
@@ -13,6 +13,8 @@ module Scnnr
   end
 
   class RequestFailed < Error; end
+
+  class RecognitionNotFound < Error; end
 
   class RecognitionFailed < Error
     attr_accessor :recognition

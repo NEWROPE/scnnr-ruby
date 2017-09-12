@@ -118,6 +118,10 @@ rescue Scnnr::RequestFailed => e
   # Failed to reserve the recognition.
   # This kind of errors have no `#recognition` field.
   STDERR.puts "[ERROR] #{e.title}: #{e.detail} (e.type)"
+rescue Scnnr::RecognitionNotFound => e
+  # Failed to find the recognition with the specified ID.
+  # This kind of errors have no `#recognition` field.
+  STDERR.puts "[ERROR] #{e.title}: #{e.detail} (e.type)"
 rescue => e
   # Unexpected error.
   raise
