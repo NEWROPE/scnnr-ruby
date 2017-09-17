@@ -48,7 +48,7 @@ RSpec.describe Scnnr::PollingManager do
         it { expect { subject }.not_to change(manager, :timeout) }
       end
 
-      context 'and not finished recognition returnes' do
+      context 'and not finished recognition returns' do
         include_context 'not finished recognition returns'
         let(:times) { 1 }
 
@@ -69,7 +69,7 @@ RSpec.describe Scnnr::PollingManager do
         end
       end
 
-      context 'and not finished recognition returnes' do
+      context 'and not finished recognition returns' do
         include_context 'not finished recognition returns'
         let(:times) { (Float(timeout) / Scnnr::PollingManager::MAX_TIMEOUT).ceil }
 

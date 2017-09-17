@@ -15,8 +15,8 @@ RSpec.describe Scnnr::Client do
   let(:api_key) { 'dummy_key' }
   let(:api_version) { 'v1' }
   let(:timeout) { 0 }
-  let(:logger) { Logger.new(STDOUT) }
-  let(:logger_level) { :warn }
+  let(:logger) { Logger.new('/dev/null') }
+  let(:logger_level) { :info }
 
   before do
     stub.any_instance_of(Net::HTTPResponse).body { fixture('queued_recognition.json') }

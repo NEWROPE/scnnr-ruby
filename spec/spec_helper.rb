@@ -4,6 +4,7 @@ require 'bundler/setup'
 require 'scnnr'
 require 'webmock/rspec'
 require 'rr'
+require 'support/fixture'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -17,12 +18,4 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
-end
-
-def fixture_path
-  File.expand_path('../fixtures', __FILE__)
-end
-
-def fixture(file)
-  File.open(fixture_path + '/' + file)
 end

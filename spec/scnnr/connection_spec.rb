@@ -7,7 +7,7 @@ RSpec.describe Scnnr::Connection do
 
   let(:connection) { described_class.new(uri, method, api_key, logger) }
   let(:uri) { URI.parse('https://dummy.scnnr.cubki.jp') }
-  let(:logger) { Logger.new(STDOUT, level: :warn) }
+  let(:logger) { Logger.new('/dev/null') }
   let(:api_key) { nil }
   let(:expected_body) { fixture('queued_recognition.json').read }
 

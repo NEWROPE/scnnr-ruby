@@ -14,9 +14,9 @@ group :test do
   gem 'rr', '1.1.2'
   gem 'rspec', '~> 3.5'
   gem 'rspec_junit_formatter', '~> 0.3'
-  gem 'rubocop', '~> 0.49'
+  gem 'rubocop', '~> 0.49.0'
   gem 'rubocop-junit-formatter', '~> 0.1'
-  gem 'rubocop-rspec', '~> 1.15'
+  gem 'rubocop-rspec', '~> 1.15.0'
   gem 'webmock', '~> 3.0'
 end
 

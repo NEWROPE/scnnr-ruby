@@ -16,7 +16,7 @@ RSpec.describe Scnnr::Response do
     let(:parsed_body) { JSON.parse(body) }
     let(:content_type) { Scnnr::Response::SUPPORTED_CONTENT_TYPE }
 
-    context 'when returning successful response' do
+    context 'when successful response returns' do
       let(:response_class) { Net::HTTPSuccess }
 
       context 'and recognition state is queued' do
@@ -68,7 +68,7 @@ RSpec.describe Scnnr::Response do
       end
     end
 
-    context 'when returning error response' do
+    context 'when error response returns' do
       context 'and the error is NotFound' do
         let(:response_class) { Net::HTTPNotFound }
         let(:body) { fixture('recognition_not_found.json').read }
@@ -96,7 +96,7 @@ RSpec.describe Scnnr::Response do
       end
     end
 
-    context 'when returning unsupported response' do
+    context 'when unsupported response returns' do
       let(:response_class) { Net::HTTPUnprocessableEntity }
       let(:body) { 'UnsupportedError' }
       let(:content_type) { 'application/json' }
