@@ -41,5 +41,27 @@ Style/RedundantSelf:
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
 
+Layout/IndentHash:
+  EnforcedStyle: consistent
+
+Style/BracesAroundHashParameters:
+  Enabled: false
+
 RSpec/NestedGroups:
   Max: 5
+
+RSpec/NamedSubject:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Enabled: false
+
+RSpec/MessageSpies:
+  EnforcedStyle: receive
+
+RSpec/AnyInstance:
+  Exclude:
+    - 'spec/scnnr/connection_spec.rb'

@@ -2,8 +2,13 @@
 
 module Scnnr
   class Client
+    require 'net/http'
+    require 'json'
+
+    ENDPOINT_BASE = 'https://api.scnnr.cubki.jp'
+
     def initialize
-      yield(self.config)
+      yield(self.config) if block_given?
     end
 
     def config
@@ -11,19 +16,25 @@ module Scnnr
     end
 
     def recognize_image(image, options = {})
-      # TODO: request to API using image
-      # return recognition instance
+      options = merge_options(options)
+      uri = construct_uri('recognitions', options)
+      # TODO: Use PollingManager to be accepted timeout > 25
+      response = post_connection(uri, options).send_stream(image)
+      handle_response(response, options)
     end
 
     def recognize_url(url, options = {})
-      # TODO: request to API using url
-      # return recognition instance
+      options = merge_options(options)
+      uri = construct_uri('remote/recognitions', options)
+      # TODO: Use PollingManager to be accepted timeout > 25
+      response = post_connection(uri, options).send_json({ url: url })
+      handle_response(response, options)
     end
 
     def fetch(recognition_id, options = {})
       return request(recognition_id, options) if options.delete(:polling) == false
       options = merge_options(options)
-      Request.new(options.delete(:timeout)).polling(self, recognition_id, options)
+      PollingManager.new(options.delete(:timeout)).polling(self, recognition_id, options)
     end
 
     private
@@ -32,10 +43,29 @@ module Scnnr
       self.config.to_h.merge(options)
     end
 
+    def construct_uri(path, options = {})
+      options = merge_options(options)
+      URI.parse("#{ENDPOINT_BASE}/#{options[:api_version]}/#{path}?timeout=#{options[:timeout]}")
+    end
+
+    def get_connection(uri, options = {})
+      Connection.new(uri, :get, nil, options[:logger])
+    end
+
+    def post_connection(uri, options = {})
+      Connection.new(uri, :post, options[:api_key], options[:logger])
+    end
+
     def request(recognition_id, options = {})
-      # options = merge_options(options)
-      # TODO: request to API using ID
-      # return recognition instance
+      options = merge_options(options)
+      uri = construct_uri("recognitions/#{recognition_id}", options)
+      response = get_connection(uri, options).send_request
+      handle_response(response, options)
+    end
+
+    def handle_response(response, options = {})
+      response = Response.new(response, options[:timeout].positive?)
+      response.build_recognition
     end
   end
 end

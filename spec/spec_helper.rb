@@ -2,6 +2,8 @@
 
 require 'bundler/setup'
 require 'scnnr'
+require 'webmock/rspec'
+require 'support/fixture'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
