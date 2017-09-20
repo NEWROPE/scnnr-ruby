@@ -18,9 +18,13 @@ RSpec.describe Scnnr::Client do
   let(:logger) { Logger.new('/dev/null') }
   let(:logger_level) { :info }
 
+  let(:mock_connection) { instance_double(Scnnr::Connection) }
+  let(:mock_origin_response) { instance_double(Net::HTTPResponse) }
+  let(:mock_response) { instance_double(Scnnr::Response) }
+
   before do
-    stub.any_instance_of(Net::HTTPResponse).body { fixture('queued_recognition.json') }
-    stub.any_instance_of(Net::HTTPResponse).content_type { Scnnr::Response::SUPPORTED_CONTENT_TYPE }
+    allow(mock_origin_response).to receive(:body) { fixture('queued_recognition.json') }
+    allow(mock_origin_response).to receive(:content_type) { Scnnr::Response::SUPPORTED_CONTENT_TYPE }
   end
 
   describe '#config' do
@@ -42,12 +46,13 @@ RSpec.describe Scnnr::Client do
     let(:uri) { client.send(:construct_uri, 'recognitions', options) }
     let(:options) { {} }
 
-    before do
-      mock.proxy(Scnnr::Connection).new.with(uri, :post, is_a(String), is_a(Logger))
-      mock.any_instance_of(Scnnr::Connection).send_stream.with(image) { Net::HTTPResponse.new(nil, nil, nil) }
-      mock.any_instance_of(Scnnr::Response).build_recognition
+    it do
+      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      expect(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+      expect(mock_response).to receive(:build_recognition)
+      subject
     end
-    it { subject }
   end
 
   describe '#recognize_url' do
@@ -57,12 +62,13 @@ RSpec.describe Scnnr::Client do
     let(:uri) { client.send(:construct_uri, 'remote/recognitions', options) }
     let(:options) { {} }
 
-    before do
-      mock.proxy(Scnnr::Connection).new.with(uri, :post, is_a(String), is_a(Logger))
-      mock.any_instance_of(Scnnr::Connection).send_json.with({ url: url }) { Net::HTTPResponse.new(nil, nil, nil) }
-      mock.any_instance_of(Scnnr::Response).build_recognition
+    it do
+      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      expect(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+      expect(mock_response).to receive(:build_recognition)
+      subject
     end
-    it { subject }
   end
 
   describe '#fetch' do
@@ -72,11 +78,14 @@ RSpec.describe Scnnr::Client do
     let(:recognition_id) { 'dummy_id' }
     let(:options) { {} }
 
-    before do
-      mock.proxy.any_instance_of(Scnnr::PollingManager).polling(client, recognition_id, is_a(Hash))
-      mock.any_instance_of(Scnnr::Connection).send_request { Net::HTTPResponse.new(nil, nil, nil) }
-      mock.any_instance_of(Scnnr::Response).build_recognition { Scnnr::Recognition.new }
+    it do
+      expect_any_instance_of(Scnnr::PollingManager).to receive(:polling).with(client, recognition_id, Hash)
+        .and_call_original
+      expect(Scnnr::Connection).to receive(:new).with(uri, :get, nil, logger) { mock_connection }
+      expect(mock_connection).to receive(:send_request) { mock_origin_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+      expect(mock_response).to receive(:build_recognition) { Scnnr::Recognition.new }
+      subject
     end
-    it { subject }
   end
 end

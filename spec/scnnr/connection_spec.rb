@@ -11,18 +11,6 @@ RSpec.describe Scnnr::Connection do
   let(:api_key) { nil }
   let(:expected_body) { fixture('queued_recognition.json').read }
 
-  shared_examples_for 'request successfully' do
-    it do
-      is_expected.to be_a Net::HTTPSuccess
-      expect(subject.body).to eq expected_body
-      if requested_options.empty?
-        expect(WebMock).to have_requested(method, uri)
-      else
-        expect(WebMock).to have_requested(method, uri).with(requested_options)
-      end
-    end
-  end
-
   describe '#send_request' do
     subject { connection.send_request(&block) }
 
@@ -30,16 +18,22 @@ RSpec.describe Scnnr::Connection do
     let(:block) { nil }
 
     context 'when the api_key is not set' do
-      let(:requested_options) { {} }
-
-      it_behaves_like 'request successfully'
+      it do
+        is_expected.to be_a Net::HTTPSuccess
+        expect(subject.body).to eq expected_body
+        expect(WebMock).to have_requested(method, uri)
+      end
     end
 
     context 'when the api_key is set' do
       let(:api_key) { 'dummy_key' }
       let(:requested_options) { { headers: { 'x-api-key' => api_key } } }
 
-      it_behaves_like 'request successfully'
+      it do
+        is_expected.to be_a Net::HTTPSuccess
+        expect(subject.body).to eq expected_body
+        expect(WebMock).to have_requested(method, uri).with(requested_options)
+      end
     end
 
     context 'when passing block' do
@@ -49,15 +43,17 @@ RSpec.describe Scnnr::Connection do
         { headers: { 'Content-Type' => requested_content_type } }
       end
 
-      it_behaves_like 'request successfully'
+      it do
+        is_expected.to be_a Net::HTTPSuccess
+        expect(subject.body).to eq expected_body
+        expect(WebMock).to have_requested(method, uri).with(requested_options)
+      end
     end
   end
 
   describe '#send_stream' do
     subject { connection.send_stream(image) }
 
-    # can not test checking requested body_stream with WebMock, so instead.
-    before { mock.any_instance_of(Net::HTTP::Post).body_stream = image }
     let(:method) { :post }
     let(:api_key) { 'dummy_key' }
     let(:image) { fixture('images/sample.png') }
@@ -68,7 +64,13 @@ RSpec.describe Scnnr::Connection do
       }
     end
 
-    it_behaves_like 'request successfully'
+    it do
+      # can not test checking requested body_stream with WebMock, so instead.
+      expect_any_instance_of(Net::HTTP::Post).to receive(:body_stream=).with(image)
+      is_expected.to be_a Net::HTTPSuccess
+      expect(subject.body).to eq expected_body
+      expect(WebMock).to have_requested(method, uri).with(requested_options)
+    end
   end
 
   describe '#send_json' do
@@ -85,6 +87,10 @@ RSpec.describe Scnnr::Connection do
       }
     end
 
-    it_behaves_like 'request successfully'
+    it do
+      is_expected.to be_a Net::HTTPSuccess
+      expect(subject.body).to eq expected_body
+      expect(WebMock).to have_requested(method, uri).with(requested_options)
+    end
   end
 end

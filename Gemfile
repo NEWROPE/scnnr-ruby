@@ -11,7 +11,6 @@ group :development do
 end
 
 group :test do
-  gem 'rr', '1.1.2'
   gem 'rspec', '~> 3.5'
   gem 'rspec_junit_formatter', '~> 0.3'
   gem 'rubocop', '~> 0.49.0'

@@ -58,3 +58,11 @@ RSpec/MultipleExpectations:
 
 RSpec/ExampleLength:
   Enabled: false
+
+RSpec/MessageSpies:
+  EnforcedStyle: receive
+
+RSpec/AnyInstance:
+  Exclude:
+    - 'spec/scnnr/client_spec.rb'
+    - 'spec/scnnr/connection_spec.rb'

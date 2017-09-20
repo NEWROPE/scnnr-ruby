@@ -7,8 +7,8 @@ RSpec.describe Scnnr::Response do
     subject { response.build_recognition }
 
     before do
-      mock.any_instance_of(Net::HTTPResponse).body { body }
-      mock.any_instance_of(Net::HTTPResponse).content_type { content_type }
+      allow(origin_response).to receive(:body) { body }
+      allow(origin_response).to receive(:content_type) { content_type }
     end
     let(:response) { described_class.new(origin_response, async) }
     let(:origin_response) { response_class.new(nil, nil, nil) }
