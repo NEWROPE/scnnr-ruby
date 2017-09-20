@@ -64,5 +64,4 @@ RSpec/MessageSpies:
 
 RSpec/AnyInstance:
   Exclude:
-    - 'spec/scnnr/client_spec.rb'
     - 'spec/scnnr/connection_spec.rb'

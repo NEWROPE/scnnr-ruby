@@ -77,10 +77,11 @@ RSpec.describe Scnnr::Client do
     let(:uri) { client.send(:construct_uri, "recognitions/#{recognition_id}", options) }
     let(:recognition_id) { 'dummy_id' }
     let(:options) { {} }
+    let!(:mock_polling_manager) { Scnnr::PollingManager.new(timeout) }
 
     it do
-      expect_any_instance_of(Scnnr::PollingManager).to receive(:polling).with(client, recognition_id, Hash)
-        .and_call_original
+      expect(Scnnr::PollingManager).to receive(:new).with(timeout) { mock_polling_manager }
+      expect(mock_polling_manager).to receive(:polling).with(client, recognition_id, Hash).and_call_original
       expect(Scnnr::Connection).to receive(:new).with(uri, :get, nil, logger) { mock_connection }
       expect(mock_connection).to receive(:send_request) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
