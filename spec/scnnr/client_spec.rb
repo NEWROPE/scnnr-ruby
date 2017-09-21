@@ -45,13 +45,14 @@ RSpec.describe Scnnr::Client do
     let(:image) { fixture('images/sample.png') }
     let(:uri) { client.send(:construct_uri, 'recognitions', options) }
     let(:options) { {} }
+    let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
       expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
       expect(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
-      expect(mock_response).to receive(:build_recognition)
-      subject
+      expect(mock_response).to receive(:build_recognition) { expected_recognition }
+      expect(subject).to eq expected_recognition
     end
   end
 
@@ -61,13 +62,14 @@ RSpec.describe Scnnr::Client do
     let(:url) { 'https://example.com/dummy.jpg' }
     let(:uri) { client.send(:construct_uri, 'remote/recognitions', options) }
     let(:options) { {} }
+    let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
       expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
       expect(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
-      expect(mock_response).to receive(:build_recognition)
-      subject
+      expect(mock_response).to receive(:build_recognition) { expected_recognition }
+      expect(subject).to eq expected_recognition
     end
   end
 
@@ -77,16 +79,14 @@ RSpec.describe Scnnr::Client do
     let(:uri) { client.send(:construct_uri, "recognitions/#{recognition_id}", options) }
     let(:recognition_id) { 'dummy_id' }
     let(:options) { {} }
-    let!(:mock_polling_manager) { Scnnr::PollingManager.new(timeout) }
+    let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
-      expect(Scnnr::PollingManager).to receive(:new).with(timeout) { mock_polling_manager }
-      expect(mock_polling_manager).to receive(:polling).with(client, recognition_id, Hash).and_call_original
       expect(Scnnr::Connection).to receive(:new).with(uri, :get, nil, logger) { mock_connection }
       expect(mock_connection).to receive(:send_request) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
-      expect(mock_response).to receive(:build_recognition) { Scnnr::Recognition.new }
-      subject
+      expect(mock_response).to receive(:build_recognition) { expected_recognition }
+      expect(subject).to eq expected_recognition
     end
   end
 end
