@@ -1,5 +1,8 @@
 # Official #CBK scnnr client library for Ruby.
 
+- [#CBK scnnr](https://scnnr.cubki.jp/)
+- [API Documentation](https://api.scnnr.cubki.jp/v1/docs)
+
 ## Installation
 ### Bundler
 ```
