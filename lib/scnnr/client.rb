@@ -23,7 +23,7 @@ module Scnnr
       uri = construct_uri('recognitions', options)
       response = post_connection(uri, options).send_stream(image)
       recognition = handle_response(response, options)
-      timeout > 0 ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
+      timeout.positive? ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
     end
 
     def recognize_url(url, options = {})
@@ -34,7 +34,7 @@ module Scnnr
       uri = construct_uri('remote/recognitions', options)
       response = post_connection(uri, options).send_json({ url: url })
       recognition = handle_response(response, options)
-      timeout > 0 ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
+      timeout.positive? ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
     end
 
     def fetch(recognition_id, options = {})
