@@ -17,18 +17,24 @@ module Scnnr
 
     def recognize_image(image, options = {})
       options = merge_options(options)
+      timeout = options[:timeout]
+      # Don't break async execution if timeout not given
+      options.delete(timeout) if timeout.positive?
       uri = construct_uri('recognitions', options)
-      # TODO: Use PollingManager to be accepted timeout > 25
       response = post_connection(uri, options).send_stream(image)
-      handle_response(response, options)
+      recognition = handle_response(response, options)
+      timeout > 0 ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
     end
 
     def recognize_url(url, options = {})
       options = merge_options(options)
+      timeout = options[:timeout]
+      # Don't break async execution if timeout not given
+      options.delete(timeout) if timeout.positive?
       uri = construct_uri('remote/recognitions', options)
-      # TODO: Use PollingManager to be accepted timeout > 25
       response = post_connection(uri, options).send_json({ url: url })
-      handle_response(response, options)
+      recognition = handle_response(response, options)
+      timeout > 0 ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
     end
 
     def fetch(recognition_id, options = {})
