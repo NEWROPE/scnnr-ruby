@@ -17,11 +17,9 @@ module Scnnr
 
     def recognize_image(image, options = {})
       options = merge_options(options)
-      timeout = options[:timeout];
+      timeout = options[:timeout]
       # Don't break async execution if timeout not given
-      if timeout > 0
-        options.delete(timeout)
-      end
+      options.delete(timeout) if timeout.positive?
       uri = construct_uri('recognitions', options)
       response = post_connection(uri, options).send_stream(image)
       recognition = handle_response(response, options)
@@ -30,11 +28,9 @@ module Scnnr
 
     def recognize_url(url, options = {})
       options = merge_options(options)
-      timeout = options[:timeout];
+      timeout = options[:timeout]
       # Don't break async execution if timeout not given
-      if timeout > 0
-        options.delete(timeout)
-      end
+      options.delete(timeout) if timeout.positive?
       uri = construct_uri('remote/recognitions', options)
       response = post_connection(uri, options).send_json({ url: url })
       recognition = handle_response(response, options)
