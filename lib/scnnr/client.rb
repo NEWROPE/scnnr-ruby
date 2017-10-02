@@ -15,26 +15,25 @@ module Scnnr
       @config ||= Configuration.new
     end
 
-    def recognize_image(image, options = {})
+    def recognize(endpoint, func, options = {})
       options = merge_options(options)
       timeout = options[:timeout]
-      # Don't break async execution if timeout not given
-      options.delete(timeout) if timeout.positive?
-      uri = construct_uri('recognitions', options)
-      response = post_connection(uri, options).send_stream(image)
+      use_polling = timeout > 25;
+      options[:timeout] = 0 if use_polling
+      uri = construct_uri(endpoint, options)
+      response = func.(uri, options)
       recognition = handle_response(response, options)
-      timeout.positive? ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
+      use_polling ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
+    end
+
+    def recognize_image(image, options = {})
+      f = -> uri, opt { post_connection(uri, opt).send_stream(image) }
+      recognize('recognitions', f, options)
     end
 
     def recognize_url(url, options = {})
-      options = merge_options(options)
-      timeout = options[:timeout]
-      # Don't break async execution if timeout not given
-      options.delete(timeout) if timeout.positive?
-      uri = construct_uri('remote/recognitions', options)
-      response = post_connection(uri, options).send_json({ url: url })
-      recognition = handle_response(response, options)
-      timeout.positive? ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
+      f = -> uri, opt { post_connection(uri, opt).send_json({ url: url }) }
+      recognize('remote/recognitions', f, options)
     end
 
     def fetch(recognition_id, options = {})
