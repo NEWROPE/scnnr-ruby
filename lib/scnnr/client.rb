@@ -15,20 +15,25 @@ module Scnnr
       @config ||= Configuration.new
     end
 
-    def recognize_image(image, options = {})
+    def recognize(endpoint, func, options = {})
       options = merge_options(options)
-      uri = construct_uri('recognitions', options)
-      # TODO: Use PollingManager to be accepted timeout > 25
-      response = post_connection(uri, options).send_stream(image)
-      handle_response(response, options)
+      timeout = options[:timeout]
+      use_polling = timeout > 25
+      options[:timeout] = 0 if use_polling
+      uri = construct_uri(endpoint, options)
+      response = func.call(uri, options)
+      recognition = handle_response(response, options)
+      use_polling ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
+    end
+
+    def recognize_image(image, options = {})
+      f = ->(uri, opt) { post_connection(uri, opt).send_stream(image) }
+      recognize('recognitions', f, options)
     end
 
     def recognize_url(url, options = {})
-      options = merge_options(options)
-      uri = construct_uri('remote/recognitions', options)
-      # TODO: Use PollingManager to be accepted timeout > 25
-      response = post_connection(uri, options).send_json({ url: url })
-      handle_response(response, options)
+      f = ->(uri, opt) { post_connection(uri, opt).send_json({ url: url }) }
+      recognize('remote/recognitions', f, options)
     end
 
     def fetch(recognition_id, options = {})
