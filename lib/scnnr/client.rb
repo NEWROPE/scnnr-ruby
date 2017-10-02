@@ -18,21 +18,21 @@ module Scnnr
     def recognize(endpoint, func, options = {})
       options = merge_options(options)
       timeout = options[:timeout]
-      use_polling = timeout > 25;
+      use_polling = timeout > 25
       options[:timeout] = 0 if use_polling
       uri = construct_uri(endpoint, options)
-      response = func.(uri, options)
+      response = func.call(uri, options)
       recognition = handle_response(response, options)
       use_polling ? fetch(recognition.id, options.merge(polling: true, timeout: timeout)) : recognition
     end
 
     def recognize_image(image, options = {})
-      f = -> uri, opt { post_connection(uri, opt).send_stream(image) }
+      f = -> (uri, opt){ post_connection(uri, opt).send_stream(image) }
       recognize('recognitions', f, options)
     end
 
     def recognize_url(url, options = {})
-      f = -> uri, opt { post_connection(uri, opt).send_json({ url: url }) }
+      f = -> (uri, opt){ post_connection(uri, opt).send_json({ url: url }) }
       recognize('remote/recognitions', f, options)
     end
 
