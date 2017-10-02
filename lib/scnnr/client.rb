@@ -27,12 +27,12 @@ module Scnnr
     end
 
     def recognize_image(image, options = {})
-      f = -> (uri, opt){ post_connection(uri, opt).send_stream(image) }
+      f = ->(uri, opt) { post_connection(uri, opt).send_stream(image) }
       recognize('recognitions', f, options)
     end
 
     def recognize_url(url, options = {})
-      f = -> (uri, opt){ post_connection(uri, opt).send_json({ url: url }) }
+      f = ->(uri, opt) { post_connection(uri, opt).send_json({ url: url }) }
       recognize('remote/recognitions', f, options)
     end
 
