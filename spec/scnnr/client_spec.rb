@@ -39,35 +39,14 @@ RSpec.describe Scnnr::Client do
     end
   end
 
-  describe '#recognize_image' do
-    subject { client.recognize_image(image, options) }
-
-    let(:image) { fixture('images/sample.png') }
-    let(:uri) { client.send(:construct_uri, 'recognitions', options) }
-    let(:options) { {} }
-    let(:expected_recognition) { Scnnr::Recognition.new }
-
-    it do
-      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
-      expect(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
-      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
-      expect(mock_response).to receive(:build_recognition) { expected_recognition }
-      expect(subject).to eq expected_recognition
-    end
-
+  shared_examples 'posting an image' do
     context 'when the timeout is larger than the API supports' do
       let(:api_max_timeout) { Scnnr::PollingManager::MAX_TIMEOUT }
       let(:timeout) { api_max_timeout + 1 }
-      let(:uri_with_timeout) { an_object_having_attributes(query: a_string_matching(/timeout=#{api_max_timeout}/)) }
+      let(:uri) { an_object_having_attributes(query: a_string_matching(/timeout=#{api_max_timeout}/)) }
 
       let(:queued_recognition) { Scnnr::Recognition.new('id' => 'queued_id', 'state' => 'queued') }
       let(:finished_recognition) { Scnnr::Recognition.new('id' => 'finished_id', 'state' => 'finished') }
-
-      before do
-        expect(Scnnr::Connection).to receive(:new).with(uri_with_timeout, :post, api_key, logger) { mock_connection }
-        expect(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
-        expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
-      end
 
       context 'and the first response is queued' do
         before do
@@ -93,6 +72,28 @@ RSpec.describe Scnnr::Client do
     end
   end
 
+  describe '#recognize_image' do
+    subject { client.recognize_image(image, options) }
+
+    let(:image) { fixture('images/sample.png') }
+    let(:uri) { client.send(:construct_uri, 'recognitions', options) }
+    let(:options) { {} }
+    let(:expected_recognition) { Scnnr::Recognition.new }
+
+    before do
+      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      expect(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+    end
+
+    it do
+      expect(mock_response).to receive(:build_recognition) { expected_recognition }
+      expect(subject).to eq expected_recognition
+    end
+
+    it_behaves_like 'posting an image'
+  end
+
   describe '#recognize_url' do
     subject { client.recognize_url(url, options) }
 
@@ -101,13 +102,18 @@ RSpec.describe Scnnr::Client do
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
-    it do
+    before do
       expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
       expect(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+    end
+
+    it do
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
       expect(subject).to eq expected_recognition
     end
+
+    it_behaves_like 'posting an image'
   end
 
   describe '#fetch' do
