@@ -16,19 +16,11 @@ module Scnnr
     end
 
     def recognize_image(image, options = {})
-      options = merge_options(options)
-      uri = construct_uri('recognitions', options)
-      # TODO: Use PollingManager to be accepted timeout > 25
-      response = post_connection(uri, options).send_stream(image)
-      handle_response(response, options)
+      request_create('recognitions', options) { |connection| connection.send_stream(image) }
     end
 
     def recognize_url(url, options = {})
-      options = merge_options(options)
-      uri = construct_uri('remote/recognitions', options)
-      # TODO: Use PollingManager to be accepted timeout > 25
-      response = post_connection(uri, options).send_json({ url: url })
-      handle_response(response, options)
+      request_create('remote/recognitions', options) { |connection| connection.send_json({ url: url }) }
     end
 
     def fetch(recognition_id, options = {})
@@ -54,6 +46,22 @@ module Scnnr
 
     def post_connection(uri, options = {})
       Connection.new(uri, :post, options[:api_key], options[:logger])
+    end
+
+    def request_create(path, options)
+      options = merge_options(options)
+      fetch_timeout = options[:timeout] - PollingManager::MAX_TIMEOUT
+      options[:timeout] = [options[:timeout], PollingManager::MAX_TIMEOUT].min
+
+      uri = construct_uri(path, options)
+      response = yield post_connection(uri, options)
+      recognition = handle_response(response, options)
+
+      if recognition.queued? && fetch_timeout.positive?
+        fetch(recognition.id, options.merge(timeout: fetch_timeout))
+      else
+        recognition
+      end
     end
 
     def request(recognition_id, options = {})
