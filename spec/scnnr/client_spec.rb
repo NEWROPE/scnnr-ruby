@@ -42,24 +42,13 @@ RSpec.describe Scnnr::Client do
   shared_examples 'posting an image' do
     context 'when the timeout is larger than the API supports' do
       let(:api_max_timeout) { Scnnr::PollingManager::MAX_TIMEOUT }
-      let(:timeout) { api_max_timeout + 1 }
+      let(:timeout) { api_max_timeout * 3 + 1 }
       let(:uri) { an_object_having_attributes(query: a_string_matching(/timeout=#{api_max_timeout}/)) }
 
       let(:queued_recognition) { Scnnr::Recognition.new('id' => 'queued_id', 'state' => 'queued') }
       let(:finished_recognition) { Scnnr::Recognition.new('id' => 'finished_id', 'state' => 'finished') }
 
-      context 'and the first response is queued' do
-        before do
-          expect(mock_response).to receive(:build_recognition) { queued_recognition }
-        end
-
-        it 'tries to fetch the recognition with the remaining timeout' do
-          expect(client).to receive(:fetch).with(queued_recognition.id, hash_including(timeout: 1)) { finished_recognition }
-          expect(subject).to eq finished_recognition
-        end
-      end
-
-      context 'and the first response is finished' do
+      context 'when the first request finishes' do
         before do
           expect(mock_response).to receive(:build_recognition) { finished_recognition }
         end
@@ -67,6 +56,28 @@ RSpec.describe Scnnr::Client do
         it 'immediately returns the recognition' do
           expect(client).not_to receive(:fetch)
           expect(subject).to eq finished_recognition
+        end
+      end
+
+      context 'when the second attempt finishes' do
+        before do
+          expect(mock_response).to receive(:build_recognition) { queued_recognition }
+          expect(client).to receive(:fetch).with(queued_recognition.id, hash_including(timeout: timeout - api_max_timeout)) { finished_recognition }
+        end
+
+        it 'returns the finished recognition' do
+          expect(subject).to eq finished_recognition
+        end
+      end
+
+      context 'when the timeout is exceeded' do
+        before do
+          expect(mock_response).to receive(:build_recognition) { queued_recognition }
+          expect(client).to receive(:fetch).with(queued_recognition.id, hash_including(timeout: timeout - api_max_timeout)) { queued_recognition }
+        end
+
+        it 'returns the queued recognition' do
+          expect(subject).to eq queued_recognition
         end
       end
     end
