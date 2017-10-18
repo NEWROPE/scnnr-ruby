@@ -5,7 +5,7 @@ module Scnnr
     SUPPORTED_CONTENT_TYPE = 'application/jp.cubki.scnnr.v1+json'
 
     def initialize(response, async)
-      raise UnsupportedError, response if response.content_type != SUPPORTED_CONTENT_TYPE
+      raise UnexpectedError, response if response.content_type != SUPPORTED_CONTENT_TYPE
       @response = response
       @async = async
     end
@@ -36,17 +36,22 @@ module Scnnr
 
     def handle_recognition(recognition)
       raise TimeoutError.new('recognition timed out', recognition) if recognition.queued? && async?
-      raise RecognitionFailed.new('recognition failed', recognition) if recognition.error?
-      recognition
+      return recognition unless recognition.error?
+
+      case recognition.error['type']
+      when 'unexpected-content', 'bad-request'
+        raise RequestFailed, recognition.error
+      else raise RecognitionFailed, recognition
+      end
     end
 
     def handle_error
       case @response
       when Net::HTTPNotFound
-        raise RecognitionNotFound.new('recognition not found', self.parsed_body)
+        raise RecognitionNotFound, self.parsed_body
       when Net::HTTPUnprocessableEntity
-        raise RequestFailed.new('failed to reserve the recognition', self.parsed_body)
-      else raise UnsupportedError, @response
+        raise RequestFailed, self.parsed_body
+      else raise UnexpectedError, @response
       end
     end
   end
