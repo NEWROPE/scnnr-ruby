@@ -62,7 +62,9 @@ RSpec.describe Scnnr::Client do
       context 'when the second attempt finishes' do
         before do
           expect(mock_response).to receive(:build_recognition) { queued_recognition }
-          expect(client).to receive(:fetch).with(queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)) { finished_recognition }
+          expect(client).to receive(:fetch).with(
+            queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)
+          ).and_return(finished_recognition)
         end
 
         it 'returns the finished recognition' do
@@ -73,7 +75,9 @@ RSpec.describe Scnnr::Client do
       context 'when the timeout is exceeded' do
         before do
           expect(mock_response).to receive(:build_recognition) { queued_recognition }
-          expect(client).to receive(:fetch).with(queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)) { queued_recognition }
+          expect(client).to receive(:fetch).with(
+            queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)
+          ).and_return(queued_recognition)
         end
 
         it 'returns the queued recognition' do
