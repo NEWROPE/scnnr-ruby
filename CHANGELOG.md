@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix the client specs to make them easier to understand.
 - Fix to handle `unexpected-content` and `bad-request` API errors.
 
+### Changed
+- Rename `UnsupportedError` -> `UnexpectedError`.
+
 ## [0.1.0] - 2017-09-21
 ### Added
 - Initial release of scnnr-ruby.
