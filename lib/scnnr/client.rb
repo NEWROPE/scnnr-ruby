@@ -35,6 +35,12 @@ module Scnnr
       self.config.to_h.merge(options)
     end
 
+    def restrict_timeout(options)
+      extra_timeout = options[:timeout] - PollingManager::MAX_TIMEOUT
+      options = options.merge(timeout: [options[:timeout], PollingManager::MAX_TIMEOUT].min)
+      [options, extra_timeout]
+    end
+
     def construct_uri(path, options = {})
       options = merge_options(options)
       URI.parse("#{ENDPOINT_BASE}/#{options[:api_version]}/#{path}?timeout=#{options[:timeout]}")
@@ -49,16 +55,14 @@ module Scnnr
     end
 
     def request_create(path, options)
-      options = merge_options(options)
-      fetch_timeout = options[:timeout] - PollingManager::MAX_TIMEOUT
-      options[:timeout] = [options[:timeout], PollingManager::MAX_TIMEOUT].min
-
+      options, fetch_timeout = restrict_timeout(merge_options(options))
       uri = construct_uri(path, options)
+
       response = yield post_connection(uri, options)
       recognition = handle_response(response, options)
 
       if recognition.queued? && fetch_timeout.positive?
-        fetch(recognition.id, options.merge(timeout: fetch_timeout))
+        fetch(recognition.id, options.merge(timeout: fetch_timeout, polling: true))
       else
         recognition
       end
