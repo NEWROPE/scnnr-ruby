@@ -4,8 +4,8 @@ module Scnnr
   class Error < StandardError
     attr_accessor :detail, :title, :type
 
-    def initialize(message, attrs)
-      super(message)
+    def initialize(attrs)
+      super(attrs['detail'])
       @detail = attrs['detail']
       @title = attrs['title']
       @type = attrs['type']
@@ -19,8 +19,8 @@ module Scnnr
   class RecognitionFailed < Error
     attr_accessor :recognition
 
-    def initialize(message, recognition)
-      super(message, recognition.error)
+    def initialize(recognition)
+      super(recognition.error)
       @recognition = recognition
     end
   end
@@ -34,7 +34,7 @@ module Scnnr
     end
   end
 
-  class UnsupportedError < StandardError
+  class UnexpectedError < StandardError
     attr_accessor :response
 
     def initialize(response)

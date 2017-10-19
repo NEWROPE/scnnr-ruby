@@ -56,13 +56,13 @@ RSpec.describe Scnnr::Response do
       end
 
       context 'and recognition state is error' do
-        let(:body) { fixture('recognition_failed.json').read }
+        let(:body) { fixture('unexpected_content_error.json').read }
 
         it do
-          expect { subject }.to raise_error(Scnnr::RecognitionFailed) do |e|
-            expect(e.recognition).to be_a Scnnr::Recognition
-            expect(e.recognition.id).to eq parsed_body['id']
-            expect(e.recognition.objects.map(&:to_h)).to match_array parsed_body['objects']
+          expect { subject }.to raise_error(Scnnr::RequestFailed) do |e|
+            expect(e.type).to eq parsed_body['error']['type']
+            expect(e.title).to eq parsed_body['error']['title']
+            expect(e.detail).to eq parsed_body['error']['detail']
           end
         end
       end
@@ -71,7 +71,7 @@ RSpec.describe Scnnr::Response do
     context 'when error response returns' do
       context 'and the error is NotFound' do
         let(:response_class) { Net::HTTPNotFound }
-        let(:body) { fixture('recognition_not_found.json').read }
+        let(:body) { fixture('not_found_error.json').read }
 
         it do
           expect { subject }.to raise_error(Scnnr::RecognitionNotFound) do |e|
@@ -84,7 +84,7 @@ RSpec.describe Scnnr::Response do
 
       context 'and the error is UnprocessableEntity' do
         let(:response_class) { Net::HTTPUnprocessableEntity }
-        let(:body) { fixture('request_failed.json').read }
+        let(:body) { fixture('unprocessable_entity_error.json').read }
 
         it do
           expect { subject }.to raise_error(Scnnr::RequestFailed) do |e|
@@ -98,11 +98,11 @@ RSpec.describe Scnnr::Response do
 
     context 'when unsupported response returns' do
       let(:response_class) { Net::HTTPUnprocessableEntity }
-      let(:body) { 'UnsupportedError' }
+      let(:body) { 'UnexpectedError' }
       let(:content_type) { 'application/json' }
 
       it do
-        expect { subject }.to raise_error(Scnnr::UnsupportedError) do |e|
+        expect { subject }.to raise_error(Scnnr::UnexpectedError) do |e|
           expect(e.response).to eq origin_response
           expect(e.message).to eq body
         end
