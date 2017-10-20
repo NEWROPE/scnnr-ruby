@@ -96,7 +96,7 @@ RSpec.describe Scnnr::Response do
       end
     end
 
-    context 'when unsupported response returns' do
+    context 'when unexpected response returns' do
       let(:response_class) { Net::HTTPUnprocessableEntity }
       let(:body) { 'UnexpectedError' }
       let(:content_type) { 'application/json' }
