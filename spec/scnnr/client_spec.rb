@@ -50,7 +50,7 @@ RSpec.describe Scnnr::Client do
 
       context 'when the first request finishes' do
         before do
-          expect(mock_response).to receive(:build_recognition) { finished_recognition }
+          allow(mock_response).to receive(:build_recognition) { finished_recognition }
         end
 
         it 'immediately returns the recognition' do
@@ -61,26 +61,26 @@ RSpec.describe Scnnr::Client do
 
       context 'when the second attempt finishes' do
         before do
-          expect(mock_response).to receive(:build_recognition) { queued_recognition }
-          expect(client).to receive(:fetch).with(
-            queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)
-          ).and_return(finished_recognition)
+          allow(mock_response).to receive(:build_recognition) { queued_recognition }
         end
 
         it 'returns the finished recognition' do
+          expect(client).to receive(:fetch).with(
+            queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)
+          ).and_return(finished_recognition)
           expect(subject).to eq finished_recognition
         end
       end
 
       context 'when the timeout is exceeded' do
         before do
-          expect(mock_response).to receive(:build_recognition) { queued_recognition }
-          expect(client).to receive(:fetch).with(
-            queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)
-          ).and_return(queued_recognition)
+          allow(mock_response).to receive(:build_recognition) { queued_recognition }
         end
 
         it 'returns the queued recognition' do
+          expect(client).to receive(:fetch).with(
+            queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)
+          ).and_return(queued_recognition)
           expect(subject).to eq queued_recognition
         end
       end
@@ -96,9 +96,9 @@ RSpec.describe Scnnr::Client do
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     before do
-      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
-      expect(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
-      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+      allow(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      allow(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
+      allow(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
     end
 
     it do
@@ -118,9 +118,9 @@ RSpec.describe Scnnr::Client do
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     before do
-      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
-      expect(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
-      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+      allow(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      allow(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
+      allow(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
     end
 
     it do
