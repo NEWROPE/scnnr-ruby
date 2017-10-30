@@ -39,54 +39,6 @@ RSpec.describe Scnnr::Client do
     end
   end
 
-  shared_examples 'posting an image' do
-    context 'when the timeout is larger than the API supports' do
-      let(:api_max_timeout) { Scnnr::PollingManager::MAX_TIMEOUT }
-      let(:timeout) { api_max_timeout * 3 + 1 }
-      let(:uri) { an_object_having_attributes(query: a_string_matching(/timeout=#{api_max_timeout}/)) }
-
-      let(:queued_recognition) { Scnnr::Recognition.new('id' => 'queued_id', 'state' => 'queued') }
-      let(:finished_recognition) { Scnnr::Recognition.new('id' => 'finished_id', 'state' => 'finished') }
-
-      context 'when the first request finishes' do
-        before do
-          allow(mock_response).to receive(:build_recognition) { finished_recognition }
-        end
-
-        it 'immediately returns the recognition' do
-          expect(client).not_to receive(:fetch)
-          expect(subject).to eq finished_recognition
-        end
-      end
-
-      context 'when the second attempt finishes' do
-        before do
-          allow(mock_response).to receive(:build_recognition) { queued_recognition }
-        end
-
-        it 'returns the finished recognition' do
-          expect(client).to receive(:fetch).with(
-            queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)
-          ).and_return(finished_recognition)
-          expect(subject).to eq finished_recognition
-        end
-      end
-
-      context 'when the timeout is exceeded' do
-        before do
-          allow(mock_response).to receive(:build_recognition) { queued_recognition }
-        end
-
-        it 'returns the queued recognition' do
-          expect(client).to receive(:fetch).with(
-            queued_recognition.id, hash_including(polling: true, timeout: timeout - api_max_timeout)
-          ).and_return(queued_recognition)
-          expect(subject).to eq queued_recognition
-        end
-      end
-    end
-  end
-
   describe '#recognize_image' do
     subject { client.recognize_image(image, options) }
 
@@ -95,18 +47,15 @@ RSpec.describe Scnnr::Client do
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
-    before do
-      allow(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
-      allow(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
-      allow(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
-    end
-
     it do
+      expect(Scnnr::PollingManager)
+        .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
+      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      expect(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
       expect(subject).to eq expected_recognition
     end
-
-    it_behaves_like 'posting an image'
   end
 
   describe '#recognize_url' do
@@ -117,18 +66,15 @@ RSpec.describe Scnnr::Client do
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
-    before do
-      allow(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
-      allow(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
-      allow(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
-    end
-
     it do
+      expect(Scnnr::PollingManager)
+        .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
+      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      expect(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
       expect(subject).to eq expected_recognition
     end
-
-    it_behaves_like 'posting an image'
   end
 
   describe '#fetch' do
@@ -142,7 +88,7 @@ RSpec.describe Scnnr::Client do
     it do
       expect(Scnnr::Connection).to receive(:new).with(uri, :get, nil, logger) { mock_connection }
       expect(mock_connection).to receive(:send_request) { mock_origin_response }
-      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
       expect(subject).to eq expected_recognition
     end

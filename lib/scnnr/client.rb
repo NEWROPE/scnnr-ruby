@@ -16,11 +16,19 @@ module Scnnr
     end
 
     def recognize_image(image, options = {})
-      request_create('recognitions', options) { |connection| connection.send_stream(image) }
+      PollingManager.start(self, merge_options(options)) do |opts|
+        uri = construct_uri('recognitions', opts)
+        response = post_connection(uri, opts).send_stream(image)
+        handle_response(response)
+      end
     end
 
     def recognize_url(url, options = {})
-      request_create('remote/recognitions', options) { |connection| connection.send_json({ url: url }) }
+      PollingManager.start(self, merge_options(options)) do |opts|
+        uri = construct_uri('remote/recognitions', opts)
+        response = post_connection(uri, opts).send_json({ url: url })
+        handle_response(response)
+      end
     end
 
     def fetch(recognition_id, options = {})
@@ -33,12 +41,6 @@ module Scnnr
 
     def merge_options(options = {})
       self.config.to_h.merge(options)
-    end
-
-    def restrict_timeout(options)
-      extra_timeout = options[:timeout] - PollingManager::MAX_TIMEOUT
-      options = options.merge(timeout: [options[:timeout], PollingManager::MAX_TIMEOUT].min)
-      [options, extra_timeout]
     end
 
     def construct_uri(path, options = {})
@@ -54,29 +56,15 @@ module Scnnr
       Connection.new(uri, :post, options[:api_key], options[:logger])
     end
 
-    def request_create(path, options)
-      options, fetch_timeout = restrict_timeout(merge_options(options))
-      uri = construct_uri(path, options)
-
-      response = yield post_connection(uri, options)
-      recognition = handle_response(response, options)
-
-      if recognition.queued? && fetch_timeout.positive?
-        fetch(recognition.id, options.merge(timeout: fetch_timeout, polling: true))
-      else
-        recognition
-      end
-    end
-
     def request(recognition_id, options = {})
       options = merge_options(options)
       uri = construct_uri("recognitions/#{recognition_id}", options)
       response = get_connection(uri, options).send_request
-      handle_response(response, options)
+      handle_response(response)
     end
 
-    def handle_response(response, options = {})
-      response = Response.new(response, options[:timeout].positive?)
+    def handle_response(response)
+      response = Response.new(response)
       response.build_recognition
     end
   end

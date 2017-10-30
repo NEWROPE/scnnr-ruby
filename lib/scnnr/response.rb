@@ -4,10 +4,9 @@ module Scnnr
   class Response
     SUPPORTED_CONTENT_TYPE = 'application/jp.cubki.scnnr.v1+json'
 
-    def initialize(response, async)
+    def initialize(response)
       raise UnexpectedError, response if response.content_type != SUPPORTED_CONTENT_TYPE
       @response = response
-      @async = async
     end
 
     def body
@@ -16,10 +15,6 @@ module Scnnr
 
     def parsed_body
       @parsed_body ||= JSON.parse(self.body)
-    end
-
-    def async?
-      @async == true
     end
 
     def build_recognition
@@ -35,7 +30,6 @@ module Scnnr
     private
 
     def handle_recognition(recognition)
-      raise TimeoutError.new('recognition timed out', recognition) if recognition.queued? && async?
       return recognition unless recognition.error?
 
       case recognition.error['type']
