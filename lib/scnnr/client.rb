@@ -16,19 +16,19 @@ module Scnnr
     end
 
     def recognize_image(image, options = {})
-      options = merge_options(options)
-      uri = construct_uri('recognitions', options)
-      # TODO: Use PollingManager to be accepted timeout > 25
-      response = post_connection(uri, options).send_stream(image)
-      handle_response(response, options)
+      PollingManager.start(self, merge_options(options)) do |opts|
+        uri = construct_uri('recognitions', opts)
+        response = post_connection(uri, opts).send_stream(image)
+        handle_response(response)
+      end
     end
 
     def recognize_url(url, options = {})
-      options = merge_options(options)
-      uri = construct_uri('remote/recognitions', options)
-      # TODO: Use PollingManager to be accepted timeout > 25
-      response = post_connection(uri, options).send_json({ url: url })
-      handle_response(response, options)
+      PollingManager.start(self, merge_options(options)) do |opts|
+        uri = construct_uri('remote/recognitions', opts)
+        response = post_connection(uri, opts).send_json({ url: url })
+        handle_response(response)
+      end
     end
 
     def fetch(recognition_id, options = {})
@@ -60,11 +60,11 @@ module Scnnr
       options = merge_options(options)
       uri = construct_uri("recognitions/#{recognition_id}", options)
       response = get_connection(uri, options).send_request
-      handle_response(response, options)
+      handle_response(response)
     end
 
-    def handle_response(response, options = {})
-      response = Response.new(response, options[:timeout].positive?)
+    def handle_response(response)
+      response = Response.new(response)
       response.build_recognition
     end
   end

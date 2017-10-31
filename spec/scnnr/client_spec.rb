@@ -48,9 +48,11 @@ RSpec.describe Scnnr::Client do
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
+      expect(Scnnr::PollingManager)
+        .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
       expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
       expect(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
-      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
       expect(subject).to eq expected_recognition
     end
@@ -65,9 +67,11 @@ RSpec.describe Scnnr::Client do
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
+      expect(Scnnr::PollingManager)
+        .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
       expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
       expect(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
-      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
       expect(subject).to eq expected_recognition
     end
@@ -84,7 +88,7 @@ RSpec.describe Scnnr::Client do
     it do
       expect(Scnnr::Connection).to receive(:new).with(uri, :get, nil, logger) { mock_connection }
       expect(mock_connection).to receive(:send_request) { mock_origin_response }
-      expect(Scnnr::Response).to receive(:new).with(mock_origin_response, boolean) { mock_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
       expect(subject).to eq expected_recognition
     end

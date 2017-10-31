@@ -10,9 +10,8 @@ RSpec.describe Scnnr::Response do
       allow(origin_response).to receive(:body) { body }
       allow(origin_response).to receive(:content_type) { content_type }
     end
-    let(:response) { described_class.new(origin_response, async) }
+    let(:response) { described_class.new(origin_response) }
     let(:origin_response) { response_class.new(nil, nil, nil) }
-    let(:async) { false }
     let(:parsed_body) { JSON.parse(body) }
     let(:content_type) { Scnnr::Response::SUPPORTED_CONTENT_TYPE }
 
@@ -28,18 +27,6 @@ RSpec.describe Scnnr::Response do
           is_expected.to be_queued
           expect(subject.id).to eq parsed_body['id']
           expect(subject.objects).to be_empty
-        end
-
-        context 'with async request' do
-          let(:async) { true }
-
-          it do
-            expect { subject }.to raise_error(Scnnr::TimeoutError) do |e|
-              expect(e.recognition).to be_a Scnnr::Recognition
-              expect(e.recognition.id).to eq parsed_body['id']
-              expect(e.recognition.objects.map(&:to_h)).to match_array parsed_body['objects']
-            end
-          end
         end
       end
 
