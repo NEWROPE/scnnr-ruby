@@ -45,7 +45,8 @@ module Scnnr
 
     def construct_uri(path, options = {})
       options = merge_options(options)
-      URI.parse("#{ENDPOINT_BASE}/#{options[:api_version]}/#{path}?timeout=#{options[:timeout]}")
+      public_url = options[:public].nil? ? '' : "&public=#{options[:public]}"
+      URI.parse("#{ENDPOINT_BASE}/#{options[:api_version]}/#{path}?timeout=#{options[:timeout]}#{public_url}")
     end
 
     def get_connection(uri, options = {})
