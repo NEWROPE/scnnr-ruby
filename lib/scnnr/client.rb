@@ -18,6 +18,7 @@ module Scnnr
     def recognize_image(image, options = {})
       PollingManager.start(self, merge_options(options)) do |opts|
         uri = construct_uri('recognitions', opts)
+        uri.query = [uri.query, "public=#{options[:public]}"].compact.join('&') unless options[:public].nil?
         response = post_connection(uri, opts).send_stream(image)
         handle_response(response)
       end
@@ -45,8 +46,7 @@ module Scnnr
 
     def construct_uri(path, options = {})
       options = merge_options(options)
-      public_url = options[:public].nil? ? '' : "&public=#{options[:public]}"
-      URI.parse("#{ENDPOINT_BASE}/#{options[:api_version]}/#{path}?timeout=#{options[:timeout]}#{public_url}")
+      URI.parse("#{ENDPOINT_BASE}/#{options[:api_version]}/#{path}?timeout=#{options[:timeout]}")
     end
 
     def get_connection(uri, options = {})
