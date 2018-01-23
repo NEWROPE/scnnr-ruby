@@ -25,9 +25,12 @@ module Scnnr
     end
 
     def to_h
-      hash = { 'id' => self.id, 'objects' => self.objects.map(&:to_h), 'state' => self.state.to_s }
-      hash['image'] = self.image.to_h if self.image
-      hash
+      {
+        'id' => self.id,
+        'image' => self.image&.to_h,
+        'objects' => self.objects.map(&:to_h),
+        'state' => self.state.to_s,
+      }.compact
     end
   end
 end
