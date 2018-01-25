@@ -10,7 +10,7 @@ RSpec.describe Scnnr::PollingManager do
 
     let(:timeout) { Scnnr::PollingManager::MAX_TIMEOUT * 3 }
     let(:client) { instance_double(Scnnr::Client) }
-    let(:options) { { api_key: 'test', timeout: timeout } }
+    let(:options) { { api_key: 'test', timeout: timeout, public: true } }
     let(:block) { proc { finished_recognition } }
 
     let(:queued_recognition) { Scnnr::Recognition.new('state' => 'queued') }
@@ -18,7 +18,7 @@ RSpec.describe Scnnr::PollingManager do
 
     it 'passes the max timeout and other options to the block' do
       expect(block).to receive(:call).with({
-        api_key: 'test', timeout: Scnnr::PollingManager::MAX_TIMEOUT
+        api_key: 'test', timeout: Scnnr::PollingManager::MAX_TIMEOUT, public: true
       }).and_return(finished_recognition)
 
       result

@@ -40,6 +40,20 @@ RSpec.describe Scnnr::Response do
           expect(subject.id).to eq parsed_body['id']
           expect(subject.objects.map(&:to_h)).to match_array parsed_body['objects']
         end
+
+        context 'without image object' do
+          it do
+            expect(subject.to_h).to match_array parsed_body
+          end
+        end
+
+        context 'with image object' do
+          let(:body) { fixture('finished_recognition_with_image.json').read }
+
+          it do
+            expect(subject.to_h).to match_array parsed_body
+          end
+        end
       end
 
       context 'and recognition state is error' do
