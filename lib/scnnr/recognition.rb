@@ -25,13 +25,12 @@ module Scnnr
     end
 
     def to_h
-      hash = {
+      {
         'id' => self.id,
         'image' => self.image&.to_h,
         'objects' => self.objects.map(&:to_h),
         'state' => self.state.to_s,
       }
-      hash.reject { |_, value| value.nil? }
     end
   end
 end
