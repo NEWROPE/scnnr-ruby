@@ -18,17 +18,14 @@ module Scnnr
     end
 
     def build_recognition
-      case @response
-      when Net::HTTPSuccess
-        recognition = Recognition.new(self.parsed_body)
-        handle_recognition(recognition)
-      else
-        handle_error
-      end
+      raise_error_response! unless @response.is_a? Net::HTTPSuccess
+      recognition = Recognition.new(self.parsed_body)
+      handle_recognition(recognition)
     end
 
     def build_coordinate
-      raise NotImplementedError
+      raise_error_response! unless @response.is_a? Net::HTTPSuccess
+      Coordinate.new(self.parsed_body)
     end
 
     private
@@ -43,7 +40,7 @@ module Scnnr
       end
     end
 
-    def handle_error
+    def raise_error_response!
       case @response
       when Net::HTTPNotFound
         raise RecognitionNotFound, self.parsed_body
