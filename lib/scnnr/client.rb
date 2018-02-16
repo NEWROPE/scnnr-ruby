@@ -22,7 +22,7 @@ module Scnnr
     def recognize_image(image, options = {})
       options = merge_options options
       PollingManager.start(self, options) do |opts|
-        uri = construct_uri('recognitions', [:timeout, :public], opts)
+        uri = construct_uri('recognitions', %i[timeout public], opts)
         response = post_connection(uri, opts).send_stream(image)
         Response.new(response).build_recognition
       end
@@ -31,7 +31,7 @@ module Scnnr
     def recognize_url(url, options = {})
       options = merge_options options
       PollingManager.start(self, options) do |opts|
-        uri = construct_uri('remote/recognitions', [:timeout], opts)
+        uri = construct_uri('remote/recognitions', %i[timeout], opts)
         response = post_connection(uri, opts).send_json({ url: url })
         Response.new(response).build_recognition
       end
@@ -45,7 +45,7 @@ module Scnnr
 
     def coordinate(category, labels, taste = {}, options = {})
       options = merge_options options
-      uri = construct_uri('coordinates', [], options)
+      uri = construct_uri('coordinates', %i[], options)
       payload = {
         item: { category: category, labels: labels },
         taste: TASTES.each_with_object({}) { |key, memo| memo[key] = taste[key] if taste[key] },
@@ -76,7 +76,7 @@ module Scnnr
     end
 
     def request(recognition_id, options = {})
-      uri = construct_uri("recognitions/#{recognition_id}", [:timeout], options)
+      uri = construct_uri("recognitions/#{recognition_id}", %i[timeout], options)
       response = get_connection(uri, options).send_request
       Response.new(response).build_recognition
     end
