@@ -7,10 +7,10 @@ module Scnnr
 
     attr_reader :path_prefix
 
-    def initialize(path, path_prefix, queries)
+    def initialize(path, path_prefix, params, allowed_params)
       @path = path
       @path_prefix = path_prefix
-      @queries = queries
+      @queries = build_queries params, allowed_params
     end
 
     def to_url
@@ -39,6 +39,17 @@ module Scnnr
       params
         .map { |pair| pair.map { |val| URI.encode_www_form_component val }.join('=') }
         .join('&')
+    end
+
+    def build_queries(params, allowed_params)
+      {}.tap do |queries|
+        (allowed_params || []).each do |param|
+          case param.intern
+          when :timeout then queries[:timeout] = params[:timeout] if params[:timeout]&.positive?
+          else queries[param] = params[param]
+          end
+        end
+      end
     end
   end
 end

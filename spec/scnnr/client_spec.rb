@@ -45,8 +45,8 @@ RSpec.describe Scnnr::Client do
     subject { client.recognize_image(image, options) }
 
     let(:image) { fixture('images/sample.png') }
-    let(:uri) { URI.parse "#{expected_uri_base}/recognitions" }
-    let(:options) { {} }
+    let(:uri) { URI.parse "#{expected_uri_base}/recognitions?public=true" }
+    let(:options) { { public: true } }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
