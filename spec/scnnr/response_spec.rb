@@ -110,4 +110,20 @@ RSpec.describe Scnnr::Response do
       end
     end
   end
+
+  describe '#build_coordinate' do
+    subject { response.build_coordinate }
+
+    before do
+      allow(origin_response).to receive(:body) { body }
+      allow(origin_response).to receive(:content_type) { content_type }
+    end
+    let(:response) { described_class.new(origin_response) }
+    let(:origin_response) { response_class.new(nil, nil, nil) }
+    let(:parsed_body) { JSON.parse(body) }
+    let(:content_type) { Scnnr::Response::SUPPORTED_CONTENT_TYPE }
+    let(:response_class) { Net::HTTPSuccess }
+
+    pending { subject }
+  end
 end

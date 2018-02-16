@@ -27,6 +27,10 @@ module Scnnr
       end
     end
 
+    def build_coordinate
+      raise NotImplementedError
+    end
+
     private
 
     def handle_recognition(recognition)

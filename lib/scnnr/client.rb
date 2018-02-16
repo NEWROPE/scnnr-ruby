@@ -7,6 +7,12 @@ module Scnnr
     require 'net/http'
     require 'json'
 
+    TASTES = %i[
+      boyish casual celebrity conservative
+      feminine girly gyaru harajuku
+      mode natural_style
+    ].freeze
+
     def initialize
       yield(self.config) if block_given?
     end
@@ -21,7 +27,7 @@ module Scnnr
         uri = construct_uri('recognitions', [:timeout], opts)
         uri.query = [uri.query, "public=#{options[:public]}"].compact.join('&') if options[:public] == true
         response = post_connection(uri, opts).send_stream(image)
-        handle_response(response)
+        Response.new(response).build_recognition
       end
     end
 
@@ -30,7 +36,7 @@ module Scnnr
       PollingManager.start(self, options) do |opts|
         uri = construct_uri('remote/recognitions', [:timeout], opts)
         response = post_connection(uri, opts).send_json({ url: url })
-        handle_response(response)
+        Response.new(response).build_recognition
       end
     end
 
@@ -38,6 +44,17 @@ module Scnnr
       options = merge_options options
       return request(recognition_id, options) if options.delete(:polling) == false
       PollingManager.new(options.delete(:timeout)).polling(self, recognition_id, options)
+    end
+
+    def coordinate(category, labels, tastes = {}, options = {})
+      options = merge_options options
+      uri = construct_uri('coordinates', [], options)
+      payload = {
+        item: { category: category, labels: labels },
+        tastes: TASTES.each_with_object({}) { |taste, memo| memo[taste] = tastes[taste] if tastes[taste] },
+      }
+      response = post_connection(uri, options).send_json(payload)
+      Response.new(response).build_coordinate
     end
 
     private
@@ -75,12 +92,7 @@ module Scnnr
     def request(recognition_id, options = {})
       uri = construct_uri("recognitions/#{recognition_id}", [:timeout], options)
       response = get_connection(uri, options).send_request
-      handle_response(response)
-    end
-
-    def handle_response(response)
-      response = Response.new(response)
-      response.build_recognition
+      Response.new(response).build_recognition
     end
   end
 end
