@@ -28,7 +28,11 @@ end
 ```
 
 ## Examples
+
 ### Basic usage
+
+#### Recognize images
+
 Request image recognition by an image URL.
 
 ```
@@ -97,6 +101,29 @@ recognition.to_h
 recognition = client.fetch(recognition.id)
 recognition.finished?
 => true
+```
+
+#### Generate fashion coordinates
+
+Request fashion coordinates generation.
+
+```
+coordinate = client.coordinate('tops', ['グレー', 'パーカー'], casual: 0.7, girly: 0.3)
+
+coordinate.to_h
+=> {"items"=>
+  [{"category"=>"tops", "labels"=>[{"name"=>"グレー", "score"=>nil}, {"name"=>"パーカー", "score"=>nil}]},
+   {"category"=>"shoe",
+    "labels"=>
+     [{"name"=>"ネイビー", "score"=>nil},
+      {"name"=>"スニーカー", "score"=>nil},
+      {"name"=>"ランニング", "score"=>nil}]},
+   {"category"=>"dress",
+    "labels"=>
+     [{"name"=>"デニム", "score"=>nil},
+      {"name"=>"ブルー", "score"=>nil},
+      {"name"=>"サロペット", "score"=>nil},
+      {"name"=>"オーバーオール", "score"=>nil}]}]}
 ```
 
 ### Error handling
