@@ -18,6 +18,8 @@ RSpec.describe Scnnr::Client do
   let(:logger) { Logger.new('/dev/null') }
   let(:logger_level) { :info }
 
+  let(:expected_uri_base) { "https://#{Scnnr::Routing::API_HOST}/#{api_version}" }
+
   let(:mock_connection) { instance_double(Scnnr::Connection) }
   let(:mock_origin_response) { instance_double(Net::HTTPResponse) }
   let(:mock_response) { instance_double(Scnnr::Response) }
@@ -43,7 +45,7 @@ RSpec.describe Scnnr::Client do
     subject { client.recognize_image(image, options) }
 
     let(:image) { fixture('images/sample.png') }
-    let(:uri) { client.send(:construct_uri, 'recognitions', options) }
+    let(:uri) { "#{expected_uri_base}/recognitions" }
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
@@ -62,7 +64,7 @@ RSpec.describe Scnnr::Client do
     subject { client.recognize_url(url, options) }
 
     let(:url) { 'https://example.com/dummy.jpg' }
-    let(:uri) { client.send(:construct_uri, 'remote/recognitions', options) }
+    let(:uri) { "#{expected_uri_base}/remote/recognitions" }
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
@@ -80,7 +82,7 @@ RSpec.describe Scnnr::Client do
   describe '#fetch' do
     subject { client.fetch(recognition_id, options) }
 
-    let(:uri) { client.send(:construct_uri, "recognitions/#{recognition_id}", options) }
+    let(:uri) { "#{expected_uri_base}/recognitions/#{recognition_id}" }
     let(:recognition_id) { 'dummy_id' }
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
