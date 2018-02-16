@@ -44,12 +44,12 @@ module Scnnr
       PollingManager.new(options.delete(:timeout)).polling(self, recognition_id, options)
     end
 
-    def coordinate(category, labels, tastes = {}, options = {})
+    def coordinate(category, labels, taste = {}, options = {})
       options = merge_options options
       uri = construct_uri('coordinates', [], options)
       payload = {
         item: { category: category, labels: labels },
-        tastes: TASTES.each_with_object({}) { |taste, memo| memo[taste] = tastes[taste] if tastes[taste] },
+        taste: TASTES.each_with_object({}) { |key, memo| memo[key] = taste[key] if taste[key] },
       }
       response = post_connection(uri, options).send_json(payload)
       Response.new(response).build_coordinate
@@ -65,7 +65,7 @@ module Scnnr
       Routing.new(
         path, options[:api_version],
         build_queries(options, allowed_params)
-      ).to_url.to_s
+      ).to_url
     end
 
     def build_queries(params, allowed_params)

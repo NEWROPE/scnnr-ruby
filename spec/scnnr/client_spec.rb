@@ -45,7 +45,7 @@ RSpec.describe Scnnr::Client do
     subject { client.recognize_image(image, options) }
 
     let(:image) { fixture('images/sample.png') }
-    let(:uri) { "#{expected_uri_base}/recognitions" }
+    let(:uri) { URI.parse "#{expected_uri_base}/recognitions" }
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
@@ -64,7 +64,7 @@ RSpec.describe Scnnr::Client do
     subject { client.recognize_url(url, options) }
 
     let(:url) { 'https://example.com/dummy.jpg' }
-    let(:uri) { "#{expected_uri_base}/remote/recognitions" }
+    let(:uri) { URI.parse "#{expected_uri_base}/remote/recognitions" }
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
@@ -82,7 +82,7 @@ RSpec.describe Scnnr::Client do
   describe '#fetch' do
     subject { client.fetch(recognition_id, options) }
 
-    let(:uri) { "#{expected_uri_base}/recognitions/#{recognition_id}" }
+    let(:uri) { URI.parse "#{expected_uri_base}/recognitions/#{recognition_id}" }
     let(:recognition_id) { 'dummy_id' }
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
@@ -97,17 +97,18 @@ RSpec.describe Scnnr::Client do
   end
 
   describe '#coordinate' do
-    subject { client.coordinate(category, labels, tastes, options) }
+    subject { client.coordinate(category, labels, taste_with_unknown, options) }
 
     let(:category) { 'tops' }
     let(:labels) { %w[ホワイト スカート] }
-    let(:tastes) { {} }
+    let(:taste) { { casual: 0.3, girly: 0.7 } }
+    let(:taste_with_unknown) { taste.merge(unknown: 0.4) }
     let(:options) { {} }
-    let(:uri) { "#{expected_uri_base}/coordinates" }
+    let(:uri) { URI.parse "#{expected_uri_base}/coordinates" }
     let(:expected_payload) do
       {
         item: { category: category, labels: labels },
-        tastes: tastes,
+        taste: taste,
       }
     end
     let(:expected_coordinate) { nil }
