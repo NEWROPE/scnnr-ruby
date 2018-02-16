@@ -8,13 +8,13 @@ gem 'rake', '~> 10.0'
 
 group :development do
   gem 'pry', '~> 0.10'
-end
 
-group :test do
   gem 'guard'
   gem 'guard-rspec'
   gem 'guard-rubocop'
+end
 
+group :test do
   gem 'rspec', '~> 3.5'
   gem 'rspec_junit_formatter', '~> 0.3'
 
