@@ -18,6 +18,8 @@ RSpec.describe Scnnr::Client do
   let(:logger) { Logger.new('/dev/null') }
   let(:logger_level) { :info }
 
+  let(:expected_uri_base) { "https://#{Scnnr::Routing::API_HOST}/#{api_version}" }
+
   let(:mock_connection) { instance_double(Scnnr::Connection) }
   let(:mock_origin_response) { instance_double(Net::HTTPResponse) }
   let(:mock_response) { instance_double(Scnnr::Response) }
@@ -43,8 +45,8 @@ RSpec.describe Scnnr::Client do
     subject { client.recognize_image(image, options) }
 
     let(:image) { fixture('images/sample.png') }
-    let(:uri) { client.send(:construct_uri, 'recognitions', options) }
-    let(:options) { {} }
+    let(:uri) { URI.parse "#{expected_uri_base}/recognitions?public=true" }
+    let(:options) { { public: true } }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
@@ -62,7 +64,7 @@ RSpec.describe Scnnr::Client do
     subject { client.recognize_url(url, options) }
 
     let(:url) { 'https://example.com/dummy.jpg' }
-    let(:uri) { client.send(:construct_uri, 'remote/recognitions', options) }
+    let(:uri) { URI.parse "#{expected_uri_base}/remote/recognitions" }
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
@@ -80,7 +82,7 @@ RSpec.describe Scnnr::Client do
   describe '#fetch' do
     subject { client.fetch(recognition_id, options) }
 
-    let(:uri) { client.send(:construct_uri, "recognitions/#{recognition_id}", options) }
+    let(:uri) { URI.parse "#{expected_uri_base}/recognitions/#{recognition_id}" }
     let(:recognition_id) { 'dummy_id' }
     let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
@@ -91,6 +93,32 @@ RSpec.describe Scnnr::Client do
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
       expect(subject).to eq expected_recognition
+    end
+  end
+
+  describe '#coordinate' do
+    subject { client.coordinate(category, labels, taste_with_unknown, options) }
+
+    let(:category) { 'tops' }
+    let(:labels) { %w[ホワイト スカート] }
+    let(:taste) { { casual: 0.3, girly: 0.7 } }
+    let(:taste_with_unknown) { taste.merge(unknown: 0.4) }
+    let(:options) { {} }
+    let(:uri) { URI.parse "#{expected_uri_base}/coordinates" }
+    let(:expected_payload) do
+      {
+        item: { category: category, labels: labels },
+        taste: taste,
+      }
+    end
+    let(:expected_coordinate) { nil }
+
+    it do
+      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      expect(mock_connection).to receive(:send_json).with(expected_payload) { mock_origin_response }
+      expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
+      expect(mock_response).to receive(:build_coordinate) { expected_coordinate }
+      expect(subject).to eq expected_coordinate
     end
   end
 end

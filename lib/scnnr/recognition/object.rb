@@ -8,7 +8,7 @@ module Scnnr
       def initialize(attrs = {})
         @bounding_box = BoundingBox.new(attrs['bounding_box'])
         @category = attrs['category']
-        @labels = (attrs['labels'] || []).map { |label| Label.new(label) }
+        @labels = (attrs['labels'] || []).map { |label| Scnnr::Label.new(label) }
       end
 
       def to_h

@@ -5,7 +5,11 @@ module Scnnr
     require 'net/http'
     require 'json'
 
-    ENDPOINT_BASE = 'https://api.scnnr.cubki.jp'
+    TASTES = %i[
+      boyish casual celebrity conservative
+      feminine girly gyaru harajuku
+      mode natural_style
+    ].freeze
 
     def initialize
       yield(self.config) if block_given?
@@ -16,26 +20,38 @@ module Scnnr
     end
 
     def recognize_image(image, options = {})
-      PollingManager.start(self, merge_options(options)) do |opts|
-        uri = construct_uri('recognitions', opts)
-        uri.query = [uri.query, "public=#{options[:public]}"].compact.join('&') if options[:public] == true
+      options = merge_options options
+      PollingManager.start(self, options) do |opts|
+        uri = construct_uri('recognitions', %i[timeout public], opts)
         response = post_connection(uri, opts).send_stream(image)
-        handle_response(response)
+        Response.new(response).build_recognition
       end
     end
 
     def recognize_url(url, options = {})
-      PollingManager.start(self, merge_options(options)) do |opts|
-        uri = construct_uri('remote/recognitions', opts)
+      options = merge_options options
+      PollingManager.start(self, options) do |opts|
+        uri = construct_uri('remote/recognitions', %i[timeout], opts)
         response = post_connection(uri, opts).send_json({ url: url })
-        handle_response(response)
+        Response.new(response).build_recognition
       end
     end
 
     def fetch(recognition_id, options = {})
+      options = merge_options options
       return request(recognition_id, options) if options.delete(:polling) == false
-      options = merge_options(options)
       PollingManager.new(options.delete(:timeout)).polling(self, recognition_id, options)
+    end
+
+    def coordinate(category, labels, taste = {}, options = {})
+      options = merge_options options
+      uri = construct_uri('coordinates', %i[], options)
+      payload = {
+        item: { category: category, labels: labels },
+        taste: TASTES.each_with_object({}) { |key, memo| memo[key] = taste[key] if taste[key] },
+      }
+      response = post_connection(uri, options).send_json(payload)
+      Response.new(response).build_coordinate
     end
 
     private
@@ -44,9 +60,11 @@ module Scnnr
       self.config.to_h.merge(options)
     end
 
-    def construct_uri(path, options = {})
-      options = merge_options(options)
-      URI.parse("#{ENDPOINT_BASE}/#{options[:api_version]}/#{path}?timeout=#{options[:timeout]}")
+    def construct_uri(path, allowed_params, options = {})
+      Routing.new(
+        path, options[:api_version],
+        options, allowed_params
+      ).to_url
     end
 
     def get_connection(uri, options = {})
@@ -58,15 +76,9 @@ module Scnnr
     end
 
     def request(recognition_id, options = {})
-      options = merge_options(options)
-      uri = construct_uri("recognitions/#{recognition_id}", options)
+      uri = construct_uri("recognitions/#{recognition_id}", %i[timeout], options)
       response = get_connection(uri, options).send_request
-      handle_response(response)
-    end
-
-    def handle_response(response)
-      response = Response.new(response)
-      response.build_recognition
+      Response.new(response).build_recognition
     end
   end
 end
