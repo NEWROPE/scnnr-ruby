@@ -39,7 +39,7 @@ Request image recognition by an image URL.
 url = 'https://example.com/dummy.jpg'
 recognition = client.recognize_url(url)
 
-# you can override config.timeout.
+# You can override config.timeout.
 recognition = client.recognize_url(url, timeout: 10)
 ```
 
@@ -48,6 +48,9 @@ Request image recognition by a binary image.
 ```
 img = File.open('dummy_image_file', 'rb')
 recognition = client.recognize_image(img)
+
+# You can use public parameter as well.
+recognition = client.recognize_image(img, timeout: 10, public: true)
 ```
 
 `Recognition` class represents the image recognition result from API.
@@ -59,6 +62,39 @@ recognition.finished?
 
 recognition.to_h
 => {"id"=>"20170829/ed4c674c-7970-4e9c-9b26-1b6076b36b49",
+ "objects"=>
+  [{"bounding_box"=>{"bottom"=>0.2696995, "left"=>0.3842466, "right"=>0.57190025, "top"=>0.14457992},
+    "category"=>"hat",
+    "labels"=>
+     [{"name"=>"ハット", "score"=>0.9985399},
+      {"name"=>"中折れ", "score"=>0.99334323},
+      {"name"=>"ストローハット", "score"=>0.95629793},
+      {"name"=>"ベージュ", "score"=>0.9062561},
+      {"name"=>"つば広ハット", "score"=>0.7737022},
+      {"name"=>"ホワイト", "score"=>0.5695046}]},
+   {"bounding_box"=>{"bottom"=>0.95560884, "left"=>0.41641566, "right"=>0.5212327, "top"=>0.8452401},
+    "category"=>"shoe",
+    "labels"=>
+     [{"name"=>"サンダル", "score"=>0.93934095},
+      {"name"=>"ホワイト", "score"=>0.74320596},
+      {"name"=>"パンプス", "score"=>0.70763165},
+      {"name"=>"サボ", "score"=>0.69153166},
+      {"name"=>"ストラップ", "score"=>0.66519636},
+      {"name"=>"ウェッジソール", "score"=>0.6325865},
+      {"name"=>"オープントゥ", "score"=>0.61965847},
+      {"name"=>"アンクルストラップ", "score"=>0.576824},
+      {"name"=>"厚底", "score"=>0.53842664}]},
+   {"bounding_box"=>{"bottom"=>0.7018228, "left"=>0.35182703, "right"=>0.6113004, "top"=>0.25296396},
+    "category"=>"dress",
+    "labels"=>[{"name"=>"グリーン", "score"=>0.9765959}, {"name"=>"ワンピース", "score"=>0.94697183}, {"name"=>"カーキ", "score"=>0.8136864}, {"name"=>"無地", "score"=>0.54719794}, {"name"=>"フレア", "score"=>0.51572186}]}],
+ "state"=>"finished"}
+
+# If you recognize an image with `public` parameter
+recognition.to_h
+=> {"id"=>"20170829/ed4c674c-7970-4e9c-9b26-1b6076b36b49",
+ "image"=>
+  {"url"=>"some-image-url",
+   "size"=>{"height"=>400, "width"=>400}},
  "objects"=>
   [{"bounding_box"=>{"bottom"=>0.2696995, "left"=>0.3842466, "right"=>0.57190025, "top"=>0.14457992},
     "category"=>"hat",
