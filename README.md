@@ -89,7 +89,7 @@ recognition.to_h
     "labels"=>[{"name"=>"グリーン", "score"=>0.9765959}, {"name"=>"ワンピース", "score"=>0.94697183}, {"name"=>"カーキ", "score"=>0.8136864}, {"name"=>"無地", "score"=>0.54719794}, {"name"=>"フレア", "score"=>0.51572186}]}],
  "state"=>"finished"}
 
-# If you recognize an image with `public` parameter
+# If you recognize an image with `public` parameter, the `recognition` has `image`.
 recognition.to_h
 => {"id"=>"20170829/ed4c674c-7970-4e9c-9b26-1b6076b36b49",
  "image"=>
