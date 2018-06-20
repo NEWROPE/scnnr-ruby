@@ -64,8 +64,8 @@ RSpec.describe Scnnr::Client do
     subject { client.recognize_url(url, options) }
 
     let(:url) { 'https://example.com/dummy.jpg' }
-    let(:uri) { URI.parse "#{expected_uri_base}/remote/recognitions" }
-    let(:options) { {} }
+    let(:uri) { URI.parse "#{expected_uri_base}/remote/recognitions?force=true" }
+    let(:options) { { force: true } }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
