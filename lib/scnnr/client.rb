@@ -31,7 +31,7 @@ module Scnnr
     def recognize_url(url, options = {})
       options = merge_options options
       PollingManager.start(self, options) do |opts|
-        uri = construct_uri('remote/recognitions', %i[timeout], opts)
+        uri = construct_uri('remote/recognitions', %i[timeout force], opts)
         response = post_connection(uri, opts).send_json({ url: url })
         Response.new(response).build_recognition
       end
