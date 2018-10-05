@@ -45,7 +45,7 @@ module Scnnr
 
     def coordinate(category, labels, taste = {}, options = {})
       options = merge_options options
-      uri = construct_uri('coordinates', %i[], options)
+      uri = construct_uri('coordinates', %i[target], options)
       payload = {
         item: { category: category, labels: labels },
         taste: TASTES.each_with_object({}) { |key, memo| memo[key] = taste[key] if taste[key] },

@@ -104,21 +104,34 @@ RSpec.describe Scnnr::Client do
     let(:taste) { { casual: 0.3, girly: 0.7 } }
     let(:taste_with_unknown) { taste.merge(unknown: 0.4) }
     let(:options) { {} }
-    let(:uri) { URI.parse "#{expected_uri_base}/coordinates" }
-    let(:expected_payload) do
-      {
-        item: { category: category, labels: labels },
-        taste: taste,
-      }
-    end
-    let(:expected_coordinate) { nil }
 
-    it do
-      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
-      expect(mock_connection).to receive(:send_json).with(expected_payload) { mock_origin_response }
-      expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
-      expect(mock_response).to receive(:build_coordinate) { expected_coordinate }
-      expect(subject).to eq expected_coordinate
+    shared_examples_for('sending an expected request and a coordinate returns successfully') do
+      let(:uri) { URI.parse "#{expected_uri_base}/coordinates" }
+      let(:expected_payload) do
+        {
+          item: { category: category, labels: labels },
+          taste: taste,
+        }
+      end
+      let(:expected_coordinate) { nil }
+
+      it do
+        expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+        expect(mock_connection).to receive(:send_json).with(expected_payload) { mock_origin_response }
+        expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
+        expect(mock_response).to receive(:build_coordinate) { expected_coordinate }
+        expect(subject).to eq expected_coordinate
+      end
+    end
+
+    it_behaves_like 'sending an expected request and a coordinate returns successfully'
+
+    context 'when `target` option is passed' do
+      let(:options) { { target: 8 } }
+
+      it_behaves_like 'sending an expected request and a coordinate returns successfully' do
+        let(:uri) { URI.parse "#{expected_uri_base}/coordinates?target=8" }
+      end
     end
   end
 end
