@@ -4,17 +4,21 @@
 - [API Documentation](https://api.scnnr.cubki.jp/v1/docs)
 
 ## Installation
+
 ### Bundler
+
 ```
 gem 'scnnr'
 ```
 
 ### Manual
+
 ```
 gem install scnnr
 ```
 
 ## Configuration
+
 You can pass configuration options as a block to `Scnnr::Client.new`.
 
 ```
@@ -35,6 +39,8 @@ end
 
 Request image recognition by an image URL.
 
+Refer: [`POST /v1/remote/recognitions`](https://api.scnnr.cubki.jp/v1/docs#tag/remoterecognitions%2Fpaths%2F~1remote~1recognitions%2Fpost)
+
 ```
 url = 'https://example.com/dummy.jpg'
 recognition = client.recognize_url(url)
@@ -44,6 +50,8 @@ recognition = client.recognize_url(url, timeout: 10)
 ```
 
 Request image recognition by a binary image.
+
+Refer: [`POST /v1/recognitions`](https://api.scnnr.cubki.jp/v1/docs#tag/recognitions%2Fpaths%2F~1recognitions%2Fpost)
 
 ```
 img = File.open('dummy_image_file', 'rb')
@@ -127,6 +135,8 @@ If the timeout value is zero or `nil`, you will get `Recognition` instance whose
 
 Then you can fetch the recognition result using `Scnnr::Client#fetch`.
 
+Refer: [`GET /v1/recognitions/*`](https://api.scnnr.cubki.jp/v1/docs#tag/recognitions%2Fpaths%2F~1recognitions~1*%2Fget)
+
 ```
 recognition.queued?
 => true
@@ -143,8 +153,11 @@ recognition.finished?
 
 Request fashion coordinates generation.
 
+Refer: [`POST /v1/coordinates`](https://api.scnnr.cubki.jp/v1/docs#tag/coordinates%2Fpaths%2F~1coordinates%2Fpost)
+
 ```
-coordinate = client.coordinate('tops', ['グレー', 'パーカー'], casual: 0.7, girly: 0.3)
+tastes = { casual: 0.7, girly: 0.3 }
+coordinate = client.coordinate('tops', ['グレー', 'パーカー'], tastes, target: 2)
 
 coordinate.to_h
 => {"items"=>
