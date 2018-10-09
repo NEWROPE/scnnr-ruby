@@ -157,7 +157,7 @@ Refer: [`POST /v1/coordinates`](https://api.scnnr.cubki.jp/v1/docs#tag/coordinat
 
 ```
 tastes = { casual: 0.7, girly: 0.3 }
-coordinate = client.coordinate('tops', ['グレー', 'パーカー'], tastes, target: 2)
+coordinate = client.coordinate('tops', ['グレー', 'パーカー'], tastes, target: 3)
 
 coordinate.to_h
 => {"items"=>
