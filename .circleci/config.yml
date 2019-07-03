@@ -30,17 +30,27 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
           destination: test-results
-  ruby-2.3.5:
+  ruby-2.3:
     <<: *build
     docker:
-      - image: circleci/ruby:2.3.5-node-browsers
-  ruby-2.4.1:
+      - image: circleci/ruby:2.3
+  ruby-2.4:
     <<: *build
     docker:
-      - image: circleci/ruby:2.4.1-node-browsers
+      - image: circleci/ruby:2.4
+  ruby-2.5:
+    <<: *build
+    docker:
+      - image: circleci/ruby:2.5
+  ruby-2.6:
+    <<: *build
+    docker:
+      - image: circleci/ruby:2.6
 workflows:
   version: 2
   ruby-multi-build:
     jobs:
-      - ruby-2.3.5
-      - ruby-2.4.1
+      - ruby-2.3
+      - ruby-2.4
+      - ruby-2.5
+      - ruby-2.6
