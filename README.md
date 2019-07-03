@@ -1,4 +1,5 @@
 # Official #CBK scnnr client library for Ruby.
+[![CircleCI](https://circleci.com/gh/NEWROPE/scnnr-ruby.svg?style=svg)](https://circleci.com/gh/NEWROPE/scnnr-ruby)
 
 - [#CBK scnnr](https://scnnr.cubki.jp/)
 - [API Documentation](https://api.scnnr.cubki.jp/v1/docs)
