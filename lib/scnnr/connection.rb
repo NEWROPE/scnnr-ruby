@@ -5,6 +5,15 @@ module Scnnr
     require 'net/http'
     require 'json'
 
+    RETRY_LIMIT = 3
+    RETRY_SLEEP_TIME = 1
+    RETRY_ERROR_CLASSES = [
+      Timeout::Error, Errno::EINVAL,
+      Errno::ECONNRESET, EOFError,
+      Net::HTTPBadResponse, Net::ProtocolError,
+      Net::HTTPHeaderSyntaxError
+    ].freeze
+
     def initialize(uri, method, api_key, logger)
       @uri = uri
       @method = method
@@ -31,16 +40,30 @@ module Scnnr
     def send_request
       block = block_given? ? Proc.new : nil
       request = build_request(&block)
-      run_request(request)
+      with_retries do
+        Net::HTTP.start(@uri.host, @uri.port, use_ssl: use_ssl?) do |http|
+          @logger&.info("Started #{@method.upcase} #{@uri}")
+          http.request(request)
+        end
+      end
     end
 
     private
 
-    def run_request(request)
-      Net::HTTP.start(@uri.host, @uri.port, use_ssl: use_ssl?) do |http|
-        @logger&.info("Started #{@method.upcase} #{@uri}")
-        http.request(request)
+    def with_retries
+      yield
+    rescue *RETRY_ERROR_CLASSES => e
+      retry_count ||= 0
+
+      if retry_count < RETRY_LIMIT
+        retry_count += 1
+        @logger&.info("Retrying to connect: #{@uri}, attempt: #{retry_count}")
+
+        sleep RETRY_SLEEP_TIME
+        retry
       end
+
+      raise e.class, "#{e.message} (Endpoint: #{@method.upcase} #{@uri})"
     end
 
     def use_ssl?
