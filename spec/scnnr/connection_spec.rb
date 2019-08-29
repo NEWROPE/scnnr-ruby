@@ -49,6 +49,35 @@ RSpec.describe Scnnr::Connection do
         expect(WebMock).to have_requested(method, uri).with(requested_options)
       end
     end
+
+    context 'when the response is an error' do
+      let(:response_error) { described_class::RETRY_ERROR_CLASSES.sample }
+
+      before do
+        retry_count = 0
+
+        allow_any_instance_of(described_class).to receive(:sleep)
+        allow(Net::HTTP).to receive(:start) do
+          retry_count += 1
+
+          next Net::HTTPSuccess.new(nil, nil, nil) if retry_count > 1 && success_at_retry?
+
+          raise(response_error)
+        end
+      end
+
+      context 'and it succeeds after retrying' do
+        let(:success_at_retry?) { true }
+
+        it { is_expected.to be_a Net::HTTPSuccess }
+      end
+
+      context 'and it does not succeed after retrying' do
+        let(:success_at_retry?) { false }
+
+        it { expect { subject }.to raise_error(response_error) }
+      end
+    end
   end
 
   describe '#send_stream' do
