@@ -36,7 +36,9 @@ module Scnnr
       case recognition.error['type']
       when 'unexpected-content', 'bad-request'
         raise RequestFailed, recognition.error
-      else raise RecognitionFailed, recognition
+      when 'download-timeout', 'invalid-image'
+        raise RecognitionFailed, recognition
+      else raise UnexpectedError, @response
       end
     end
 
