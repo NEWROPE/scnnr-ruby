@@ -96,13 +96,39 @@ RSpec.describe Scnnr::Response do
     end
 
     context 'when recognition state is error' do
-      let(:body) { fixture('unexpected_content_error.json').read }
+      context 'Unexpected Content Error' do
+        let(:body) { fixture('unexpected_content_error.json').read }
 
-      it do
-        expect { subject }.to raise_error(Scnnr::RequestFailed) do |e|
-          expect(e.type).to eq parsed_body['error']['type']
-          expect(e.title).to eq parsed_body['error']['title']
-          expect(e.detail).to eq parsed_body['error']['detail']
+        it do
+          expect { subject }.to raise_error(Scnnr::RequestFailed) do |e|
+            expect(e.type).to eq parsed_body['error']['type']
+            expect(e.title).to eq parsed_body['error']['title']
+            expect(e.detail).to eq parsed_body['error']['detail']
+          end
+        end
+      end
+
+      context 'Download Timeout Error' do
+        let(:body) { fixture('download_timeout_error.json').read }
+
+        it do
+          expect { subject }.to raise_error(Scnnr::RecognitionFailed) do |e|
+            expect(e.recognition).not_to be nil
+            expect(e.type).to eq parsed_body['error']['type']
+            expect(e.title).to eq parsed_body['error']['title']
+            expect(e.detail).to eq parsed_body['error']['detail']
+          end
+        end
+      end
+
+      context 'Internal Server Error' do
+        let(:body) { fixture('internal_server_error.json').read }
+
+        it do
+          expect { subject }.to raise_error(Scnnr::UnexpectedError) do |e|
+            expect(e.response).to eq origin_response
+            expect(e.message).to eq body
+          end
         end
       end
     end
