@@ -37,9 +37,8 @@ module Scnnr
       end
     end
 
-    def send_request
-      block = block_given? ? Proc.new : nil
-      request = build_request(&block)
+    def send_request(&block)
+      request = block_given? ? build_request(&block) : build_request
       with_retries do
         Net::HTTP.start(@uri.host, @uri.port, use_ssl: use_ssl?) do |http|
           @logger&.info("Started #{@method.upcase} #{@uri}")

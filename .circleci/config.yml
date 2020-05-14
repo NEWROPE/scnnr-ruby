@@ -2,7 +2,7 @@
 #
 # Check https://circleci.com/docs/2.0/language-ruby/ for more details
 #
-version: 2
+version: 2.1
 jobs:
   build: &build
     docker:
@@ -13,13 +13,15 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            bundle install --jobs=4 --retry=3 --path vendor/bundle
+            gem install bundler -v 2.1.2
+            bundle config set path vendor/bundle
+            bundle install --jobs=4 --retry=3
       # run tests!
       - run:
           name: run tests
           command: |
             mkdir /tmp/test-results
-            bundle exec rubocop --format progress -r $(bundle show rubocop-junit-formatter)/lib/rubocop/formatter/junit_formatter.rb --format RuboCop::Formatter::JUnitFormatter --out /tmp/test-results/rubocop.xml
+            bundle exec rubocop --format progress -r $(bundle info --path rubocop-junit-formatter)/lib/rubocop/formatter/junit_formatter.rb --format RuboCop::Formatter::JUnitFormatter --out /tmp/test-results/rubocop.xml
             bundle exec rspec --format progress \
                             --format RspecJunitFormatter \
                             --out /tmp/test-results/rspec.xml \
@@ -30,27 +32,32 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
           destination: test-results
-  ruby-2.3:
+  ruby-23:
     <<: *build
     docker:
       - image: circleci/ruby:2.3
-  ruby-2.4:
+  ruby-24:
     <<: *build
     docker:
       - image: circleci/ruby:2.4
-  ruby-2.5:
+  ruby-25:
     <<: *build
     docker:
       - image: circleci/ruby:2.5
-  ruby-2.6:
+  ruby-26:
     <<: *build
     docker:
       - image: circleci/ruby:2.6
+  ruby-27:
+    <<: *build
+    docker:
+      - image: circleci/ruby:2.7
 workflows:
   version: 2
   ruby-multi-build:
     jobs:
-      - ruby-2.3
-      - ruby-2.4
-      - ruby-2.5
-      - ruby-2.6
+      - ruby-23
+      - ruby-24
+      - ruby-25
+      - ruby-26
+      - ruby-27
