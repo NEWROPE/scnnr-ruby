@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 
 git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
-gem 'rake', '~> 10.0'
+gem 'rake', '~> 13.0'
 
 group :development do
   gem 'pry', '~> 0.10'
