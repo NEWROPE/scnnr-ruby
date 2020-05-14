@@ -14,13 +14,14 @@ jobs:
           name: install dependencies
           command: |
             gem install bundler -v 2.1.2
-            bundle install --jobs=4 --retry=3 --path vendor/bundle
+            bundle config set path vendor/bundle
+            bundle install --jobs=4 --retry=3
       # run tests!
       - run:
           name: run tests
           command: |
             mkdir /tmp/test-results
-            bundle exec rubocop --format progress -r $(bundle show rubocop-junit-formatter)/lib/rubocop/formatter/junit_formatter.rb --format RuboCop::Formatter::JUnitFormatter --out /tmp/test-results/rubocop.xml
+            bundle exec rubocop --format progress -r $(bundle info --path rubocop-junit-formatter)/lib/rubocop/formatter/junit_formatter.rb --format RuboCop::Formatter::JUnitFormatter --out /tmp/test-results/rubocop.xml
             bundle exec rspec --format progress \
                             --format RspecJunitFormatter \
                             --out /tmp/test-results/rspec.xml \
