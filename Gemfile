@@ -20,7 +20,7 @@ group :test do
 
   gem 'rubocop', '~> 0.49.0'
   gem 'rubocop-junit-formatter', '~> 0.1'
-  gem 'rubocop-rspec', '~> 1.15.0'
+  gem 'rubocop-rspec', '~> 1.16.0'
 
   gem 'webmock', '~> 3.0'
 end
