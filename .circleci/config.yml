@@ -21,7 +21,7 @@ jobs:
           name: run tests
           command: |
             mkdir /tmp/test-results
-            bundle exec rubocop --format progress -r $(bundle info --path rubocop-junit-formatter)/lib/rubocop/formatter/junit_formatter.rb --format RuboCop::Formatter::JUnitFormatter --out /tmp/test-results/rubocop.xml
+            bundle exec rubocop --format progress --format junit --out /tmp/test-results/rubocop.xml
             bundle exec rspec --format progress \
                             --format RspecJunitFormatter \
                             --out /tmp/test-results/rspec.xml \
