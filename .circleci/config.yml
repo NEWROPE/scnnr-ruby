@@ -32,10 +32,6 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
           destination: test-results
-  ruby-23:
-    <<: *build
-    docker:
-      - image: circleci/ruby:2.3
   ruby-24:
     <<: *build
     docker:
@@ -56,7 +52,6 @@ workflows:
   version: 2
   ruby-multi-build:
     jobs:
-      - ruby-23
       - ruby-24
       - ruby-25
       - ruby-26
