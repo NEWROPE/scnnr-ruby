@@ -50,7 +50,7 @@ RSpec.describe Scnnr::PollingManager do
       it 'times out with the queued recognition' do
         expect(client).to receive(:fetch).with(
           queued_recognition.id, hash_including(polling: false, timeout: Scnnr::PollingManager::MAX_TIMEOUT)
-        ).exactly(2).times.and_return(queued_recognition)
+        ).twice.and_return(queued_recognition)
 
         expect { subject }.to raise_error(Scnnr::TimeoutError) do |e|
           expect(e.recognition).to eq queued_recognition
@@ -99,7 +99,7 @@ RSpec.describe Scnnr::PollingManager do
         it do
           expect(client).to(receive(:fetch).with(recognition_id, hash_including(timeout: anything, polling: false))
             .once { recognition })
-          expect { subject }.to change { manager.timeout }
+          expect { subject }.to change(manager, :timeout)
             .from(timeout).to([timeout - Scnnr::PollingManager::MAX_TIMEOUT, 0].max)
           expect(subject).to eq recognition
         end
@@ -111,7 +111,7 @@ RSpec.describe Scnnr::PollingManager do
         it do
           expect(client).to(receive(:fetch).with(recognition_id, hash_including(timeout: anything, polling: false))
             .once { recognition })
-          expect { subject }.to change { manager.timeout }
+          expect { subject }.to change(manager, :timeout)
             .from(timeout).to([timeout - Scnnr::PollingManager::MAX_TIMEOUT, 0].max)
           expect(subject).to eq recognition
         end

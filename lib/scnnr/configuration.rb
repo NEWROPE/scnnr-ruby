@@ -4,7 +4,7 @@ module Scnnr
   Configuration = Struct.new(:api_key, :api_version, :timeout, :logger) do
     require 'logger'
 
-    DEFAULT_LOGGER = Logger.new(STDOUT, level: :info)
+    DEFAULT_LOGGER = Logger.new($stdout, level: :info)
 
     def initialize
       super(nil, 'v1', 0, DEFAULT_LOGGER)

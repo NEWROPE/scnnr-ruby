@@ -6,6 +6,7 @@ module Scnnr
 
     def initialize(response)
       raise UnexpectedError, response if response.content_type != SUPPORTED_CONTENT_TYPE
+
       @response = response
     end
 

@@ -19,7 +19,7 @@ RSpec.describe Scnnr::Connection do
 
     context 'when the api_key is not set' do
       it do
-        is_expected.to be_a Net::HTTPSuccess
+        expect(subject).to be_a Net::HTTPSuccess
         expect(subject.body).to eq expected_body
         expect(WebMock).to have_requested(method, uri)
       end
@@ -30,7 +30,7 @@ RSpec.describe Scnnr::Connection do
       let(:requested_options) { { headers: { 'x-api-key' => api_key } } }
 
       it do
-        is_expected.to be_a Net::HTTPSuccess
+        expect(subject).to be_a Net::HTTPSuccess
         expect(subject.body).to eq expected_body
         expect(WebMock).to have_requested(method, uri).with(requested_options)
       end
@@ -44,7 +44,7 @@ RSpec.describe Scnnr::Connection do
       end
 
       it do
-        is_expected.to be_a Net::HTTPSuccess
+        expect(subject).to be_a Net::HTTPSuccess
         expect(subject.body).to eq expected_body
         expect(WebMock).to have_requested(method, uri).with(requested_options)
       end
@@ -96,7 +96,7 @@ RSpec.describe Scnnr::Connection do
     it do
       # can not test checking requested body_stream with WebMock, so instead.
       expect_any_instance_of(Net::HTTP::Post).to receive(:body_stream=).with(image)
-      is_expected.to be_a Net::HTTPSuccess
+      expect(subject).to be_a Net::HTTPSuccess
       expect(subject.body).to eq expected_body
       expect(WebMock).to have_requested(method, uri).with(requested_options)
     end
@@ -117,7 +117,7 @@ RSpec.describe Scnnr::Connection do
     end
 
     it do
-      is_expected.to be_a Net::HTTPSuccess
+      expect(subject).to be_a Net::HTTPSuccess
       expect(subject.body).to eq expected_body
       expect(WebMock).to have_requested(method, uri).with(requested_options)
     end

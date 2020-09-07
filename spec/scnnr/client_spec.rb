@@ -26,7 +26,7 @@ RSpec.describe Scnnr::Client do
 
   before do
     allow(mock_origin_response).to receive(:body) { fixture('queued_recognition.json') }
-    allow(mock_origin_response).to receive(:content_type) { Scnnr::Response::SUPPORTED_CONTENT_TYPE }
+    allow(mock_origin_response).to receive(:content_type).and_return(Scnnr::Response::SUPPORTED_CONTENT_TYPE)
   end
 
   describe '#config' do
