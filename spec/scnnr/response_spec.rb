@@ -122,6 +122,20 @@ RSpec.describe Scnnr::Response do
         end
       end
 
+      context 'and an `Image Not Found Error`' do
+        let(:body) { fixture('image_not_found_error.json').read }
+
+        it do
+          expect { subject }.to raise_error(Scnnr::RecognitionFailed) do |e|
+            expect(e.recognition).not_to be nil
+            expect(e.type).to eq parsed_body['error']['type']
+            expect(e.title).to eq parsed_body['error']['title']
+            expect(e.detail).to eq parsed_body['error']['detail']
+            expect(e.image).to eq parsed_body['error']['image']
+          end
+        end
+      end
+
       context 'and an `Internal Server Error`' do
         let(:body) { fixture('internal_server_error.json').read }
 
