@@ -22,7 +22,7 @@ module Scnnr
     def initialize(recognition)
       super(recognition.error)
       @recognition = recognition
-      @image = recognition.error['image']
+      @image = Scnnr::Errors::Image.new(recognition.error['image']) if recognition.error['image']
     end
   end
 
