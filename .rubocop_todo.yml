@@ -6,15 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 11
-# Configuration parameters: Prefixes.
-# Prefixes: when, with, without
-RSpec/ContextWording:
-  Exclude:
-    - 'spec/scnnr/connection_spec.rb'
-    - 'spec/scnnr/polling_manager_spec.rb'
-    - 'spec/scnnr/response_spec.rb'
-
 # Offense count: 36
 # Configuration parameters: AllowSubject.
 RSpec/MultipleMemoizedHelpers:

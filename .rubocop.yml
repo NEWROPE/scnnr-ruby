@@ -68,6 +68,13 @@ RSpec/AnyInstance:
   Exclude:
     - 'spec/scnnr/connection_spec.rb'
 
+RSpec/ContextWording:
+  Prefixes:
+    - when
+    - with
+    - without
+    - and
+
 Layout/EmptyLinesAroundAttributeAccessor: # (new in 0.83)
   Enabled: true
 

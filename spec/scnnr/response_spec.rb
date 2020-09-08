@@ -97,7 +97,7 @@ RSpec.describe Scnnr::Response do
     end
 
     context 'when recognition state is error' do
-      context 'Unexpected Content Error' do
+      context 'and an `Unexpected Content Error`' do
         let(:body) { fixture('unexpected_content_error.json').read }
 
         it do
@@ -109,7 +109,7 @@ RSpec.describe Scnnr::Response do
         end
       end
 
-      context 'Download Timeout Error' do
+      context 'and a `Download Timeout Error`' do
         let(:body) { fixture('download_timeout_error.json').read }
 
         it do
@@ -122,7 +122,7 @@ RSpec.describe Scnnr::Response do
         end
       end
 
-      context 'Internal Server Error' do
+      context 'and an `Internal Server Error`' do
         let(:body) { fixture('internal_server_error.json').read }
 
         it do
