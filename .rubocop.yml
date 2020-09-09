@@ -1,5 +1,3 @@
-inherit_from: .rubocop_todo.yml
-
 require:
   - rubocop-rspec
 
@@ -74,6 +72,9 @@ RSpec/ContextWording:
     - with
     - without
     - and
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 7
 
 Layout/EmptyLinesAroundAttributeAccessor: # (new in 0.83)
   Enabled: true

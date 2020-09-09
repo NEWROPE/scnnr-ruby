@@ -5,17 +5,15 @@ require 'spec_helper'
 RSpec.describe Scnnr::Connection do
   before { stub_request(method, uri).to_return(body: expected_body, status: 200) }
 
-  let(:connection) { described_class.new(uri, method, api_key, logger) }
+  let(:connection) { described_class.new(uri, method, api_key, Logger.new('/dev/null')) }
   let(:uri) { URI.parse('https://dummy.scnnr.cubki.jp') }
-  let(:logger) { Logger.new('/dev/null') }
   let(:api_key) { nil }
   let(:expected_body) { fixture('queued_recognition.json').read }
 
   describe '#send_request' do
-    subject { connection.send_request(&block) }
+    subject { connection.send_request }
 
     let(:method) { %i[get post].sample }
-    let(:block) { nil }
 
     context 'when the api_key is not set' do
       it do
@@ -37,16 +35,14 @@ RSpec.describe Scnnr::Connection do
     end
 
     context 'when passing block' do
-      let(:block) { ->(request) { request.content_type = requested_content_type } }
+      subject { connection.send_request { |request| request.content_type = requested_content_type } }
+
       let(:requested_content_type) { 'application/json' }
-      let(:requested_options) do
-        { headers: { 'Content-Type' => requested_content_type } }
-      end
 
       it do
         expect(subject).to be_a Net::HTTPSuccess
         expect(subject.body).to eq expected_body
-        expect(WebMock).to have_requested(method, uri).with(requested_options)
+        expect(WebMock).to have_requested(method, uri).with(headers: { 'Content-Type' => requested_content_type })
       end
     end
 
@@ -86,10 +82,11 @@ RSpec.describe Scnnr::Connection do
     let(:method) { :post }
     let(:api_key) { 'dummy_key' }
     let(:image) { fixture('images/sample.png') }
-    let(:requested_content_type) { 'application/octet-stream' }
     let(:requested_options) do
       {
-        headers: { 'x-api-key' => api_key, 'Content-Type' => requested_content_type, 'Transfer-Encoding' => 'chunked' },
+        headers: {
+          'x-api-key' => api_key, 'Content-Type' => 'application/octet-stream', 'Transfer-Encoding' => 'chunked'
+        },
       }
     end
 
@@ -108,10 +105,9 @@ RSpec.describe Scnnr::Connection do
     let(:method) { :post }
     let(:api_key) { 'dummy_key' }
     let(:data) { { data: 'dummy_data' } }
-    let(:requested_content_type) { 'application/json' }
     let(:requested_options) do
       {
-        headers: { 'x-api-key' => api_key, 'Content-Type' => requested_content_type },
+        headers: { 'x-api-key' => api_key, 'Content-Type' => 'application/json' },
         body: data.to_json,
       }
     end
