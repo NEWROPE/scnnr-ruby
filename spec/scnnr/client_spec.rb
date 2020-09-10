@@ -5,54 +5,63 @@ require 'spec_helper'
 RSpec.describe Scnnr::Client do
   let(:client) do
     described_class.new do |config|
-      config.api_key = api_key
-      config.api_version = api_version
-      config.timeout = timeout
-      config.logger = logger
-      config.logger.level = logger_level
+      config.api_key = 'dummy_key'
+      config.api_version = 'v1'
+      config.timeout = 0
+      config.logger = Logger.new('/dev/null')
+      config.logger.level = :info
     end
   end
-  let(:api_key) { 'dummy_key' }
-  let(:api_version) { 'v1' }
-  let(:timeout) { 0 }
-  let(:logger) { Logger.new('/dev/null') }
-  let(:logger_level) { :info }
-
-  let(:expected_uri_base) { "https://#{Scnnr::Routing::API_HOST}/#{api_version}" }
 
   let(:mock_connection) { instance_double(Scnnr::Connection) }
   let(:mock_origin_response) { instance_double(Net::HTTPResponse) }
   let(:mock_response) { instance_double(Scnnr::Response) }
 
+  def api_uri(path)
+    URI.parse "https://#{Scnnr::Routing::API_HOST}/v1#{path}"
+  end
+
   before do
     allow(mock_origin_response).to receive(:body) { fixture('queued_recognition.json') }
-    allow(mock_origin_response).to receive(:content_type) { Scnnr::Response::SUPPORTED_CONTENT_TYPE }
+    allow(mock_origin_response).to receive(:content_type).and_return(Scnnr::Response::SUPPORTED_CONTENT_TYPE)
   end
 
   describe '#config' do
     subject { client.config }
 
+    let(:client) do
+      described_class.new do |config|
+        config.api_key = 'dummy_key'
+        config.api_version = 'v1'
+        config.timeout = 0
+        config.logger = logger
+        config.logger.level = :info
+      end
+    end
+    let(:logger) { Logger.new('/dev/null') }
+
     it 'can set api settings via block' do
-      expect(subject.api_key).to eq api_key
-      expect(subject.api_version).to eq api_version
-      expect(subject.timeout).to eq timeout
+      expect(subject.api_key).to eq 'dummy_key'
+      expect(subject.api_version).to eq 'v1'
+      expect(subject.timeout).to eq 0
       expect(subject.logger).to eq logger
-      expect(subject.logger.level).to eq Logger.const_get(logger_level.upcase)
+      expect(subject.logger.level).to eq Logger::INFO
     end
   end
 
   describe '#recognize_image' do
-    subject { client.recognize_image(image, options) }
+    subject { client.recognize_image(image, public: true) }
 
     let(:image) { fixture('images/sample.png') }
-    let(:uri) { URI.parse "#{expected_uri_base}/recognitions?public=true" }
-    let(:options) { { public: true } }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
       expect(Scnnr::PollingManager)
         .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
-      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      expect(Scnnr::Connection)
+        .to receive(:new).with(
+          api_uri('/recognitions?public=true'), :post, client.config.api_key, client.config.logger
+        ) { mock_connection }
       expect(mock_connection).to receive(:send_stream).with(image) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
@@ -61,17 +70,18 @@ RSpec.describe Scnnr::Client do
   end
 
   describe '#recognize_url' do
-    subject { client.recognize_url(url, options) }
+    subject { client.recognize_url(url, force: true) }
 
     let(:url) { 'https://example.com/dummy.jpg' }
-    let(:uri) { URI.parse "#{expected_uri_base}/remote/recognitions?force=true" }
-    let(:options) { { force: true } }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
       expect(Scnnr::PollingManager)
         .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
-      expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
+      expect(Scnnr::Connection)
+        .to receive(:new).with(
+          api_uri('/remote/recognitions?force=true'), :post, client.config.api_key, client.config.logger
+        ) { mock_connection }
       expect(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
@@ -80,15 +90,16 @@ RSpec.describe Scnnr::Client do
   end
 
   describe '#fetch' do
-    subject { client.fetch(recognition_id, options) }
+    subject { client.fetch(recognition_id) }
 
-    let(:uri) { URI.parse "#{expected_uri_base}/recognitions/#{recognition_id}" }
     let(:recognition_id) { 'dummy_id' }
-    let(:options) { {} }
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
-      expect(Scnnr::Connection).to receive(:new).with(uri, :get, nil, logger) { mock_connection }
+      expect(Scnnr::Connection)
+        .to receive(:new).with(
+          api_uri("/recognitions/#{recognition_id}"), :get, nil, client.config.logger
+        ) { mock_connection }
       expect(mock_connection).to receive(:send_request) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
@@ -97,41 +108,36 @@ RSpec.describe Scnnr::Client do
   end
 
   describe '#coordinate' do
-    subject { client.coordinate(category, labels, taste_with_unknown, options) }
+    subject { client.coordinate(category, labels, taste.merge(unknown: 0.4)) }
 
     let(:category) { 'tops' }
     let(:labels) { %w[ホワイト スカート] }
     let(:taste) { { casual: 0.3, girly: 0.7 } }
-    let(:taste_with_unknown) { taste.merge(unknown: 0.4) }
-    let(:options) { {} }
 
-    shared_examples_for('sending an expected request and a coordinate returns successfully') do
-      let(:uri) { URI.parse "#{expected_uri_base}/coordinates" }
-      let(:expected_payload) do
-        {
-          item: { category: category, labels: labels },
-          taste: taste,
-        }
-      end
-      let(:expected_coordinate) { nil }
+    shared_examples_for('sending an expected request and a coordinate returns successfully') do |api_path|
+      expected_coordinate = nil
 
       it do
-        expect(Scnnr::Connection).to receive(:new).with(uri, :post, api_key, logger) { mock_connection }
-        expect(mock_connection).to receive(:send_json).with(expected_payload) { mock_origin_response }
+        expect(Scnnr::Connection)
+          .to receive(:new).with(
+            api_uri(api_path), :post, client.config.api_key, client.config.logger
+          ) { mock_connection }
+        expect(mock_connection)
+          .to receive(:send_json).with(
+            item: { category: category, labels: labels }, taste: taste
+          ) { mock_origin_response }
         expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
         expect(mock_response).to receive(:build_coordinate) { expected_coordinate }
         expect(subject).to eq expected_coordinate
       end
     end
 
-    it_behaves_like 'sending an expected request and a coordinate returns successfully'
+    it_behaves_like 'sending an expected request and a coordinate returns successfully', '/coordinates'
 
     context 'when `target` option is passed' do
-      let(:options) { { target: 8 } }
+      subject { client.coordinate(category, labels, taste.merge(unknown: 0.4), target: 8) }
 
-      it_behaves_like 'sending an expected request and a coordinate returns successfully' do
-        let(:uri) { URI.parse "#{expected_uri_base}/coordinates?target=8" }
-      end
+      it_behaves_like 'sending an expected request and a coordinate returns successfully', '/coordinates?target=8'
     end
   end
 end

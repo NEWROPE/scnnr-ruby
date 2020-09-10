@@ -40,6 +40,7 @@ module Scnnr
     def fetch(recognition_id, options = {})
       options = merge_options options
       return request(recognition_id, options) if options.delete(:polling) == false
+
       PollingManager.new(options.delete(:timeout)).polling(self, recognition_id, options)
     end
 

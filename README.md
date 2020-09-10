@@ -5,7 +5,7 @@
 - [API Documentation](https://api.scnnr.cubki.jp/v1/docs)
 
 ## Supported Ruby versions
-- Ruby 2.3+
+- Ruby 2.4+
 
 ## Installation
 

@@ -51,6 +51,7 @@ RSpec.describe Scnnr::Response do
       allow(origin_response).to receive(:body) { body }
       allow(origin_response).to receive(:content_type) { content_type }
     end
+
     let(:response) { described_class.new(origin_response) }
     let(:origin_response) { response_class.new(nil, nil, nil) }
     let(:parsed_body) { JSON.parse(body) }
@@ -62,8 +63,8 @@ RSpec.describe Scnnr::Response do
 
       it do
         expect { subject }.not_to raise_error
-        is_expected.to be_a Scnnr::Recognition
-        is_expected.to be_queued
+        expect(subject).to be_a Scnnr::Recognition
+        expect(subject).to be_queued
         expect(subject.id).to eq parsed_body['id']
         expect(subject.objects).to be_empty
       end
@@ -74,8 +75,8 @@ RSpec.describe Scnnr::Response do
 
       it do
         expect { subject }.not_to raise_error
-        is_expected.to be_a Scnnr::Recognition
-        is_expected.to be_finished
+        expect(subject).to be_a Scnnr::Recognition
+        expect(subject).to be_finished
         expect(subject.id).to eq parsed_body['id']
         expect(subject.objects.map(&:to_h)).to match_array parsed_body['objects']
       end
@@ -96,7 +97,7 @@ RSpec.describe Scnnr::Response do
     end
 
     context 'when recognition state is error' do
-      context 'Unexpected Content Error' do
+      context 'and an `Unexpected Content Error`' do
         let(:body) { fixture('unexpected_content_error.json').read }
 
         it do
@@ -108,7 +109,7 @@ RSpec.describe Scnnr::Response do
         end
       end
 
-      context 'Download Timeout Error' do
+      context 'and a `Download Timeout Error`' do
         let(:body) { fixture('download_timeout_error.json').read }
 
         it do
@@ -121,7 +122,7 @@ RSpec.describe Scnnr::Response do
         end
       end
 
-      context 'Internal Server Error' do
+      context 'and an `Internal Server Error`' do
         let(:body) { fixture('internal_server_error.json').read }
 
         it do
@@ -143,6 +144,7 @@ RSpec.describe Scnnr::Response do
       allow(origin_response).to receive(:body) { body }
       allow(origin_response).to receive(:content_type) { content_type }
     end
+
     let(:response) { described_class.new(origin_response) }
     let(:origin_response) { response_class.new(nil, nil, nil) }
     let(:parsed_body) { JSON.parse(body) }
@@ -153,7 +155,7 @@ RSpec.describe Scnnr::Response do
 
     it do
       expect { subject }.not_to raise_error
-      is_expected.to be_a Scnnr::Coordinate
+      expect(subject).to be_a Scnnr::Coordinate
       subject.items.zip(JSON.parse(body)['items']) do |item, json|
         expect(item.category).to eq json['category']
         expect(item.labels.map(&:name)).to eq json['labels']

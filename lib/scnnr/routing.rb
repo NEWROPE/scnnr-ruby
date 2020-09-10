@@ -26,9 +26,9 @@ module Scnnr
     end
 
     def path
-      '/' + [self.path_prefix, @path]
+      "/#{[self.path_prefix, @path]
         .map { |value| value.sub(%r{\A/}, '').sub(%r{/\z}, '') }
-        .join('/')
+        .join('/')}"
     end
 
     private
@@ -36,6 +36,7 @@ module Scnnr
     def query_string
       params = self.queries
       return if params.empty?
+
       params
         .map { |pair| pair.map { |val| URI.encode_www_form_component val }.join('=') }
         .join('&')
