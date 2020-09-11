@@ -3,15 +3,11 @@
 module Scnnr
   module Errors
     class Image
-      attr_accessor :url
+      attr_accessor :url, :response
 
       def initialize(attrs)
-        @response = attrs['response']
+        @response = Response.new(attrs['response'])
         @url = attrs['url']
-      end
-
-      def status
-        @response['status']
       end
     end
   end

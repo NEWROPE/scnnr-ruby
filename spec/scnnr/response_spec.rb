@@ -131,7 +131,7 @@ RSpec.describe Scnnr::Response do
             expect(e.type).to eq parsed_body['error']['type']
             expect(e.title).to eq parsed_body['error']['title']
             expect(e.detail).to eq parsed_body['error']['detail']
-            expect(e.image.status).to eq parsed_body['error']['image']['response']['status']
+            expect(e.image.response.status).to eq parsed_body['error']['image']['response']['status']
             expect(e.image.url).to eq parsed_body['error']['image']['url']
           end
         end
