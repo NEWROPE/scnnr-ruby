@@ -17,11 +17,12 @@ module Scnnr
   class RecognitionNotFound < Error; end
 
   class RecognitionFailed < Error
-    attr_accessor :recognition
+    attr_accessor :recognition, :image
 
     def initialize(recognition)
       super(recognition.error)
       @recognition = recognition
+      @image = Scnnr::Errors::Image.new(recognition.error['image']) if recognition.error['image']
     end
   end
 

@@ -2,6 +2,8 @@
 
 require 'scnnr/configuration'
 require 'scnnr/errors'
+require 'scnnr/errors/image'
+require 'scnnr/errors/image/response'
 require 'scnnr/label'
 require 'scnnr/recognition'
 require 'scnnr/recognition/image'

@@ -122,6 +122,21 @@ RSpec.describe Scnnr::Response do
         end
       end
 
+      context 'and an `Image Downloading Failed Error`' do
+        let(:body) { fixture('image_downloading_failed_error.json').read }
+
+        it do
+          expect { subject }.to raise_error(Scnnr::RecognitionFailed) do |e|
+            expect(e.recognition).not_to be nil
+            expect(e.type).to eq parsed_body['error']['type']
+            expect(e.title).to eq parsed_body['error']['title']
+            expect(e.detail).to eq parsed_body['error']['detail']
+            expect(e.image.response.status).to eq parsed_body['error']['image']['response']['status']
+            expect(e.image.url).to eq parsed_body['error']['image']['url']
+          end
+        end
+      end
+
       context 'and an `Internal Server Error`' do
         let(:body) { fixture('internal_server_error.json').read }
 
