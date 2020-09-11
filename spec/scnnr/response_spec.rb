@@ -122,8 +122,8 @@ RSpec.describe Scnnr::Response do
         end
       end
 
-      context 'and an `Image Not Found Error`' do
-        let(:body) { fixture('image_not_found_error.json').read }
+      context 'and an `Image Downloading Failed Error`' do
+        let(:body) { fixture('image_downloading_failed_error.json').read }
 
         it do
           expect { subject }.to raise_error(Scnnr::RecognitionFailed) do |e|
