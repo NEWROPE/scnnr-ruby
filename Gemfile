@@ -21,7 +21,7 @@ group :test do
   gem 'rubocop', '~> 0.90.0'
   gem 'rubocop-rspec', '~> 1.43.2'
 
-  gem 'webmock', '~> 3.0'
+  gem 'webmock', '~> 3.8.0'
 end
 
 gemspec
