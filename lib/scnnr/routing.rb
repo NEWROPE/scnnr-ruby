@@ -21,13 +21,13 @@ module Scnnr
       )
     end
 
+    private
+
     def path
       "/#{[self.path_prefix, @path]
         .map { |value| value.sub(%r{\A/}, '').sub(%r{/\z}, '') }
         .join('/')}"
     end
-
-    private
 
     def build_queries(params, allowed_params)
       result = {}.tap do |queries|
