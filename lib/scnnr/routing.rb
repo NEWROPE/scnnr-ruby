@@ -30,15 +30,8 @@ module Scnnr
     end
 
     def build_queries(params, allowed_params)
-      result = {}.tap do |queries|
-        (allowed_params || []).each do |param|
-          case param.intern
-          when :timeout then queries[:timeout] = params[:timeout] if params[:timeout]&.positive?
-          else queries[param] = params[param]
-          end
-        end
-      end
-      result.compact
+      params.delete(:timeout) unless params[:timeout]&.positive?
+      params.compact.slice(*allowed_params)
     end
   end
 end
