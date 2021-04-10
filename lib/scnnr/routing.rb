@@ -21,10 +21,6 @@ module Scnnr
       )
     end
 
-    def queries
-      @queries.reject { |_, val| val.nil? }
-    end
-
     def path
       "/#{[self.path_prefix, @path]
         .map { |value| value.sub(%r{\A/}, '').sub(%r{/\z}, '') }
@@ -34,13 +30,13 @@ module Scnnr
     private
 
     def query_string
-      return if self.queries.empty?
+      return if @queries.empty?
 
-      URI.encode_www_form self.queries
+      URI.encode_www_form @queries
     end
 
     def build_queries(params, allowed_params)
-      {}.tap do |queries|
+      result = {}.tap do |queries|
         (allowed_params || []).each do |param|
           case param.intern
           when :timeout then queries[:timeout] = params[:timeout] if params[:timeout]&.positive?
@@ -48,6 +44,7 @@ module Scnnr
           end
         end
       end
+      result.compact
     end
   end
 end
