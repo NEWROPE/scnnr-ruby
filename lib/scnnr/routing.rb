@@ -35,8 +35,8 @@ module Scnnr
     end
 
     def build_queries(params, allowed_params)
-      params = self.clean_up_timeout(params)
-      params.compact.slice(*allowed_params)
+      queries = params.compact.slice(*allowed_params)
+      self.clean_up_timeout(queries)
     end
   end
 end
