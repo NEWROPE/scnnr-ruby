@@ -29,13 +29,13 @@ module Scnnr
         .join('/')}"
     end
 
-    def clean_up_timeout(params)
+    def cleanup_invalid_timeout(params)
       params.reject { |k, v| k == :timeout && !v.positive? }
     end
 
     def build_queries(params, allowed_params)
       queries = self.filter_params(params, allowed_params)
-      self.clean_up_timeout(queries)
+      self.cleanup_invalid_timeout(queries)
     end
 
     def filter_params(params, allowed_params)
