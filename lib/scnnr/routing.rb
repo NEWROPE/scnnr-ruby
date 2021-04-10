@@ -17,7 +17,7 @@ module Scnnr
       API_SCHEME.build(
         host: API_HOST,
         path: self.path,
-        query: query_string
+        query: URI.encode_www_form(@queries)
       )
     end
 
@@ -28,12 +28,6 @@ module Scnnr
     end
 
     private
-
-    def query_string
-      return if @queries.empty?
-
-      URI.encode_www_form @queries
-    end
 
     def build_queries(params, allowed_params)
       result = {}.tap do |queries|
