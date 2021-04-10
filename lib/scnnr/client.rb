@@ -39,7 +39,11 @@ module Scnnr
 
     def fetch(recognition_id, options = {})
       options = merge_options options
-      return request(recognition_id, options) if options.delete(:polling) == false
+      if options.delete(:polling) == false
+        uri = construct_uri("recognitions/#{recognition_id}", %i[timeout], options)
+        response = get(uri, options).send_request_with_retries
+        return Response.new(response).build_recognition
+      end
 
       PollingManager.new(options.delete(:timeout)).polling(self, recognition_id, options)
     end
@@ -78,12 +82,6 @@ module Scnnr
 
     def post_file(uri, file, options = {})
       Connection.new(uri, :post, options[:api_key], options[:logger]).send_stream(file)
-    end
-
-    def request(recognition_id, options = {})
-      uri = construct_uri("recognitions/#{recognition_id}", %i[timeout], options)
-      response = get(uri, options).send_request_with_retries
-      Response.new(response).build_recognition
     end
   end
 end
