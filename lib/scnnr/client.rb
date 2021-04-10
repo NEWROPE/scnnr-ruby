@@ -23,7 +23,7 @@ module Scnnr
       options = merge_options options
       PollingManager.start(self, options) do |opts|
         uri = construct_uri('recognitions', %i[timeout public], opts)
-        response = post_connection(uri, opts).send_stream(image)
+        response = post_file(uri, image, opts)
         Response.new(response).build_recognition
       end
     end
@@ -32,7 +32,7 @@ module Scnnr
       options = merge_options options
       PollingManager.start(self, options) do |opts|
         uri = construct_uri('remote/recognitions', %i[timeout force], opts)
-        response = post_connection(uri, opts).send_json({ url: url })
+        response = post(uri, { url: url }, opts)
         Response.new(response).build_recognition
       end
     end
@@ -51,7 +51,7 @@ module Scnnr
         item: { category: category, labels: labels },
         taste: TASTES.each_with_object({}) { |key, memo| memo[key] = taste[key] if taste[key] },
       }
-      response = post_connection(uri, options).send_json(payload)
+      response = post(uri, payload, options)
       Response.new(response).build_coordinate
     end
 
@@ -68,17 +68,21 @@ module Scnnr
       ).to_url
     end
 
-    def get_connection(uri, options = {})
+    def get(uri, options = {})
       Connection.new(uri, :get, nil, options[:logger])
     end
 
-    def post_connection(uri, options = {})
-      Connection.new(uri, :post, options[:api_key], options[:logger])
+    def post(uri, data, options = {})
+      Connection.new(uri, :post, options[:api_key], options[:logger]).send_json(data)
+    end
+
+    def post_file(uri, file, options = {})
+      Connection.new(uri, :post, options[:api_key], options[:logger]).send_stream(file)
     end
 
     def request(recognition_id, options = {})
       uri = construct_uri("recognitions/#{recognition_id}", %i[timeout], options)
-      response = get_connection(uri, options).send_request
+      response = get(uri, options).send_request
       Response.new(response).build_recognition
     end
   end
