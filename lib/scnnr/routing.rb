@@ -30,8 +30,7 @@ module Scnnr
     end
 
     def clean_up_timeout(params)
-      params.delete(:timeout) unless params[:timeout]&.positive?
-      params
+      params.reject { |k, v| k == :timeout && !v.positive? }
     end
 
     def build_queries(params, allowed_params)
