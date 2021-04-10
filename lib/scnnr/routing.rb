@@ -29,8 +29,13 @@ module Scnnr
         .join('/')}"
     end
 
-    def build_queries(params, allowed_params)
+    def clean_up_timeout(params)
       params.delete(:timeout) unless params[:timeout]&.positive?
+      params
+    end
+
+    def build_queries(params, allowed_params)
+      params = self.clean_up_timeout(params)
       params.compact.slice(*allowed_params)
     end
   end
