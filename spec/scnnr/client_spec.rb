@@ -100,7 +100,7 @@ RSpec.describe Scnnr::Client do
         .to receive(:new).with(
           api_uri("/recognitions/#{recognition_id}"), :get, nil, client.config.logger
         ) { mock_connection }
-      expect(mock_connection).to receive(:send_request) { mock_origin_response }
+      expect(mock_connection).to receive(:send_request_with_retries) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
       expect(subject).to eq expected_recognition

@@ -82,7 +82,7 @@ module Scnnr
 
     def request(recognition_id, options = {})
       uri = construct_uri("recognitions/#{recognition_id}", %i[timeout], options)
-      response = get(uri, options).send_request
+      response = get(uri, options).send_request_with_retries
       Response.new(response).build_recognition
     end
   end
