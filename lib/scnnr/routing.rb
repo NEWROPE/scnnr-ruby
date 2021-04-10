@@ -34,12 +34,9 @@ module Scnnr
     private
 
     def query_string
-      params = self.queries
-      return if params.empty?
+      return if self.queries.empty?
 
-      params
-        .map { |pair| pair.map { |val| URI.encode_www_form_component val }.join('=') }
-        .join('&')
+      URI.encode_www_form self.queries
     end
 
     def build_queries(params, allowed_params)
