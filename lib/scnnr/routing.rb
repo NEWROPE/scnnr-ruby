@@ -5,8 +5,6 @@ module Scnnr
     API_SCHEME = URI::HTTPS
     API_HOST = 'api.scnnr.cubki.jp'
 
-    attr_reader :path_prefix
-
     def initialize(path, path_prefix, params, allowed_params)
       @path = path
       @path_prefix = path_prefix
@@ -24,7 +22,7 @@ module Scnnr
     private
 
     def path
-      "/#{[self.path_prefix, @path]
+      "/#{[@path_prefix, @path]
         .map { |value| value.sub(%r{\A/}, '').sub(%r{/\z}, '') }
         .join('/')}"
     end
