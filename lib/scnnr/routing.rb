@@ -10,7 +10,7 @@ module Scnnr
     def initialize(path, path_prefix, params, allowed_params)
       @path = path
       @path_prefix = path_prefix
-      @queries = build_queries params, allowed_params
+      @queries = filter_params(params, allowed_params)
     end
 
     def to_url
@@ -35,8 +35,12 @@ module Scnnr
     end
 
     def build_queries(params, allowed_params)
-      queries = params.compact.slice(*allowed_params)
+      queries = self.filter_params(params, allowed_params)
       self.clean_up_timeout(queries)
+    end
+
+    def filter_params(params, allowed_params)
+      params.compact.slice(*allowed_params)
     end
   end
 end
