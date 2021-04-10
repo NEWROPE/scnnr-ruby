@@ -20,7 +20,7 @@ module Scnnr
     end
 
     def recognize_image(image, options = {})
-      options = merge_options options
+      options = default_options.merge options
       PollingManager.start(self, options) do |opts|
         uri = construct_uri('recognitions', %i[timeout public], opts)
         response = post_file(uri, image, opts)
@@ -29,7 +29,7 @@ module Scnnr
     end
 
     def recognize_url(url, options = {})
-      options = merge_options options
+      options = default_options.merge options
       PollingManager.start(self, options) do |opts|
         uri = construct_uri('remote/recognitions', %i[timeout force], opts)
         response = post(uri, { url: url }, opts)
@@ -38,7 +38,7 @@ module Scnnr
     end
 
     def fetch(recognition_id, options = {})
-      options = merge_options options
+      options = default_options.merge options
       if options.delete(:polling) == false
         uri = construct_uri("recognitions/#{recognition_id}", %i[timeout], options)
         response = get(uri, options).send_request_with_retries
@@ -49,7 +49,7 @@ module Scnnr
     end
 
     def coordinate(category, labels, taste = {}, options = {})
-      options = merge_options options
+      options = default_options.merge options
       uri = construct_uri('coordinates', %i[target], options)
       payload = {
         item: { category: category, labels: labels },
@@ -61,8 +61,8 @@ module Scnnr
 
     private
 
-    def merge_options(options = {})
-      self.config.to_h.merge(options)
+    def default_options
+      self.config.to_h
     end
 
     def construct_uri(path, allowed_params, options = {})
