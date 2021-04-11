@@ -30,7 +30,7 @@ module Scnnr
     end
 
     def self.filter_params(params, allowed_params)
-      params.compact.slice(*allowed_params)
+      params.compact.select { |key| allowed_params.include?(key) }
     end
 
     private_class_method :path, :cleanup_invalid_timeout, :build_queries, :filter_params
