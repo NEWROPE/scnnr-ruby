@@ -66,10 +66,10 @@ module Scnnr
     end
 
     def construct_uri(path, allowed_params, options = {})
-      Routing.new(
+      Routing.to_url(
         path, options[:api_version],
         options, allowed_params
-      ).to_url
+      )
     end
 
     def get(uri, options = {})

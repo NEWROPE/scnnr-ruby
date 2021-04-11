@@ -5,39 +5,34 @@ module Scnnr
     API_SCHEME = URI::HTTPS
     API_HOST = 'api.scnnr.cubki.jp'
 
-    def initialize(path, path_prefix, params, allowed_params)
-      @path = path
-      @path_prefix = path_prefix
-      @queries = filter_params(params, allowed_params)
-    end
-
-    def to_url
+    def self.to_url(path, path_prefix, params, allowed_params)
+      queries = build_queries(params, allowed_params)
       API_SCHEME.build(
         host: API_HOST,
-        path: self.path,
-        query: URI.encode_www_form(@queries)
+        path: self.path(path_prefix, path),
+        query: URI.encode_www_form(queries)
       )
     end
 
-    private
-
-    def path
-      "/#{[@path_prefix, @path]
+    def self.path(path_prefix, path)
+      "/#{[path_prefix, path]
         .map { |value| value.sub(%r{\A/}, '').sub(%r{/\z}, '') }
         .join('/')}"
     end
 
-    def cleanup_invalid_timeout(params)
+    def self.cleanup_invalid_timeout(params)
       params.reject { |k, v| k == :timeout && !v.positive? }
     end
 
-    def build_queries(params, allowed_params)
+    def self.build_queries(params, allowed_params)
       queries = self.filter_params(params, allowed_params)
       self.cleanup_invalid_timeout(queries)
     end
 
-    def filter_params(params, allowed_params)
+    def self.filter_params(params, allowed_params)
       params.compact.slice(*allowed_params)
     end
+
+    private_class_method :path, :cleanup_invalid_timeout, :build_queries, :filter_params
   end
 end
