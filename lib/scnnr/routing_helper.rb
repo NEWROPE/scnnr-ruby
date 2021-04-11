@@ -9,7 +9,7 @@ module Scnnr
       queries = build_queries(params, allowed_params)
       API_SCHEME.build(
         host: API_HOST,
-        path: self.path(path_prefix, path),
+        path: path(path_prefix, path),
         query: URI.encode_www_form(queries)
       )
     end
@@ -25,8 +25,8 @@ module Scnnr
     end
 
     def self.build_queries(params, allowed_params)
-      queries = self.filter_params(params, allowed_params)
-      self.cleanup_invalid_timeout(queries)
+      queries = filter_params(params, allowed_params)
+      cleanup_invalid_timeout(queries)
     end
 
     def self.filter_params(params, allowed_params)
