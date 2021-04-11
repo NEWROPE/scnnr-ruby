@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Scnnr
-  class Routing
+  class RoutingHelper
     API_SCHEME = URI::HTTPS
     API_HOST = 'api.scnnr.cubki.jp'
 
