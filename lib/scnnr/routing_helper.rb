@@ -10,7 +10,7 @@ module Scnnr
       API_SCHEME.build(
         host: API_HOST,
         path: path(path_prefix, path),
-        query: URI.encode_www_form(queries)
+        query: queries.empty? ? nil : URI.encode_www_form(queries)
       )
     end
 
