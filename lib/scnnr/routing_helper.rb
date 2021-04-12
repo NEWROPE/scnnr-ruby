@@ -20,7 +20,7 @@ module Scnnr
         .join('/')}"
     end
 
-    # TODO handling timeout should be moved out from here, this could potentially to introduce bug
+    # TODO: handling timeout should be moved out from here, this could potentially to introduce bug
     # as this logic does not match the intention of this class's purpose, which is very specific
     def self.cleanup_invalid_timeout(params)
       params.reject { |k, v| k == :timeout && !v.positive? }
