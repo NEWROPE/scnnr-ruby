@@ -118,4 +118,32 @@ RSpec.describe Scnnr::PollingUtils do
       end
     end
   end
+
+  describe '.calculate_timeout' do
+    subject(:result) { described_class.calculate_timeout(timeout_at) }
+
+    context 'when it is 30 after now' do
+      let(:timeout_at) { now + 30 }
+
+      it 'returns 5' do
+        expect(result).to eq(25)
+      end
+    end
+
+    context 'when it is 20 after now' do
+      let(:timeout_at) { now + 20 }
+
+      it 'returns 20' do
+        expect(result).to eq(20)
+      end
+    end
+
+    context 'when timeout at before now' do
+      let(:timeout_at) { now - 1 }
+
+      it 'returns raise ArgumentError' do
+        expect { result }.to raise_error(ArgumentError)
+      end
+    end
+  end
 end

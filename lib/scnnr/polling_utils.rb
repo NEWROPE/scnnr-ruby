@@ -25,7 +25,9 @@ module Scnnr
 
     def self.calculate_timeout(timeout_at)
       total_timeout = timeout_at - Time.now.utc
-      [total_timeout - MAX_TIMEOUT_INTERVAL].min
+      raise ArgumentError, 'timeout_at must be after now' unless total_timeout.positive?
+
+      [total_timeout, MAX_TIMEOUT_INTERVAL].min
     end
 
     def self.timeout_at(timeout)
