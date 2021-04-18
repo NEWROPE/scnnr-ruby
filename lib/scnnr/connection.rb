@@ -22,7 +22,7 @@ module Scnnr
     end
 
     def send_stream(stream)
-      send_request do |req|
+      send_request_with_retries do |req|
         req['Content-Type'] = 'application/octet-stream'
         req['Transfer-Encoding'] = 'chunked'
         req.body_stream = stream
@@ -31,19 +31,23 @@ module Scnnr
 
     def send_json(data)
       data = data.to_json if data.is_a?(Hash)
-      send_request do |req|
+      send_request_with_retries do |req|
         req['Content-Type'] = 'application/json'
         req.body = data
       end
     end
 
+    def send_request_with_retries(&block)
+      with_retries do
+        send_request(&block)
+      end
+    end
+
     def send_request(&block)
       request = block_given? ? build_request(&block) : build_request
-      with_retries do
-        Net::HTTP.start(@uri.host, @uri.port, use_ssl: use_ssl?) do |http|
-          @logger&.info("Started #{@method.upcase} #{@uri}")
-          http.request(request)
-        end
+      Net::HTTP.start(@uri.host, @uri.port, use_ssl: use_ssl?) do |http|
+        @logger&.info("Started #{@method.upcase} #{@uri}")
+        http.request(request)
       end
     end
 

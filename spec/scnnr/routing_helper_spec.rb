@@ -2,11 +2,10 @@
 
 require 'spec_helper'
 
-RSpec.describe Scnnr::Routing do
+RSpec.describe Scnnr::RoutingHelper do
   describe '#to_url' do
-    subject { routing.to_url }
+    subject { described_class.to_url(path, path_prefix, params, allowed_params) }
 
-    let(:routing) { described_class.new path, path_prefix, params, allowed_params }
     let(:path) { '/foo/bar.baz' }
     let(:path_prefix) { 'v1' }
     let(:params) { { timeout: 25, public: false, nil_param: nil } }
