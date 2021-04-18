@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe Scnnr::RoutingHelper do
+RSpec.describe Scnnr::RoutingUtils do
   describe '#to_url' do
     subject { described_class.to_url(path, path_prefix, params, allowed_params) }
 

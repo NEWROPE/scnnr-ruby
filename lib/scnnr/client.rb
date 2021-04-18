@@ -119,7 +119,7 @@ module Scnnr
     end
 
     def construct_uri(path, allowed_params, options = {})
-      RoutingHelper.to_url(
+      RoutingUtils.to_url(
         path, options[:api_version],
         options, allowed_params
       )

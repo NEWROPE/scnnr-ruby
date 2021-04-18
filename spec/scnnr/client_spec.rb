@@ -18,7 +18,7 @@ RSpec.describe Scnnr::Client do
   let(:mock_response) { instance_double(Scnnr::Response) }
 
   def api_uri(path)
-    URI.parse "https://#{Scnnr::RoutingHelper::API_HOST}/v1#{path}"
+    URI.parse "https://#{Scnnr::RoutingUtils::API_HOST}/v1#{path}"
   end
 
   before do
