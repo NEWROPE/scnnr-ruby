@@ -5,7 +5,6 @@ module Scnnr
     class TimeoutError < StandardError; end
 
     def self.poll(timeout_at, &block)
-      block_value = nil
       loop do
         block_value = block.call
         break if Time.now.utc > timeout_at
