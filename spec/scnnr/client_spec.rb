@@ -56,8 +56,6 @@ RSpec.describe Scnnr::Client do
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
-      expect(Scnnr::PollingUtils)
-        .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
       expect(Scnnr::Connection)
         .to receive(:new).with(
           api_uri('/recognitions?public=true'), :post, client.config.api_key, client.config.logger
@@ -76,8 +74,6 @@ RSpec.describe Scnnr::Client do
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
-      expect(Scnnr::PollingUtils)
-        .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
       expect(Scnnr::Connection)
         .to receive(:new).with(
           api_uri('/remote/recognitions?force=true'), :post, client.config.api_key, client.config.logger
@@ -85,7 +81,7 @@ RSpec.describe Scnnr::Client do
       expect(mock_connection).to receive(:send_json).with({ url: url }) { mock_origin_response }
       expect(Scnnr::Response).to receive(:new).with(mock_origin_response) { mock_response }
       expect(mock_response).to receive(:build_recognition) { expected_recognition }
-      expect(subject).to eq expected_recognition
+      expect(subject).to eq(expected_recognition)
     end
   end
 
