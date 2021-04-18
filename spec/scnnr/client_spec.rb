@@ -56,7 +56,7 @@ RSpec.describe Scnnr::Client do
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
-      expect(Scnnr::PollingManager)
+      expect(Scnnr::PollingUtils)
         .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
       expect(Scnnr::Connection)
         .to receive(:new).with(
@@ -76,7 +76,7 @@ RSpec.describe Scnnr::Client do
     let(:expected_recognition) { Scnnr::Recognition.new }
 
     it do
-      expect(Scnnr::PollingManager)
+      expect(Scnnr::PollingUtils)
         .to receive(:start).with(client, hash_including(client.config.to_h)).and_call_original
       expect(Scnnr::Connection)
         .to receive(:new).with(

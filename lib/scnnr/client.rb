@@ -36,7 +36,7 @@ module Scnnr
       return get_recognition(recognition_id, options) if without_timeout?(options[:timeout])
 
       validate_timeout(options[:timeout])
-      timeout_at = Scnnr.PollingManager.timeout_at(options[:timeout])
+      timeout_at = Scnnr.PollingUtils.timeout_at(options[:timeout])
 
       recognize_poll(recognition_id, timeout_at, options)
     end
@@ -59,7 +59,7 @@ module Scnnr
       return block.call(options) if without_timeout?(options[:timeout])
 
       validate_timeout(options[:timeout])
-      timeout_at = Scnnr.PollingManager.timeout_at(options[:timeout])
+      timeout_at = Scnnr.PollingUtils.timeout_at(options[:timeout])
 
       result = recognize_start(timeout_at, options) do |opts|
         block.call(opts)
@@ -71,15 +71,15 @@ module Scnnr
     end
 
     def recognize_start(timeout_at, options = {}, &block)
-      Scnnr.PollingManager.start timeout_at do
-        timeout = Scnnr.PollingManager.calculate_timeout(timeout_at)
+      Scnnr.PollingUtils.start timeout_at do
+        timeout = Scnnr.PollingUtils.calculate_timeout(timeout_at)
         block.call(options.merge({ timeout: timeout }))
       end
     end
 
     def recognize_poll(id, timeout_at, options = {})
-      Scnnr.PollingManager.poll timeout_at do
-        timeout = Scnnr.PollingManager.calculate_timeout(timeout_at)
+      Scnnr.PollingUtils.poll timeout_at do
+        timeout = Scnnr.PollingUtils.calculate_timeout(timeout_at)
         get_recognition(id, options.merge({ timeout: timeout }))
       end
     end

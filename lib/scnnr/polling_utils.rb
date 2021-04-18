@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Scnnr
-  class PollingManager
+  class PollingUtils
     MAX_TIMEOUT_INTERVAL = 25
 
     def self.start(timeout_at, &block)

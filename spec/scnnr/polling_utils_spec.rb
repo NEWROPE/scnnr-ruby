@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe Scnnr::PollingManager do
+RSpec.describe Scnnr::PollingUtils do
   let(:now) { Time.local(2000, 1, 1, 0, 0, 0) }
   let(:before_now) { now - 1 }
   let(:after_now) { now + 1 }
