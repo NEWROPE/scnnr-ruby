@@ -106,4 +106,16 @@ RSpec.describe Scnnr::PollingManager do
       end
     end
   end
+
+  describe '.timeout_at' do
+    subject(:result) { described_class.timeout_at(timeout) }
+
+    context 'when passed timeout' do
+      let(:timeout) { 100 }
+
+      it 'return now + timeout' do
+        expect(result).to eq(Time.now.utc + timeout)
+      end
+    end
+  end
 end
