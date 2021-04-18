@@ -20,32 +20,25 @@ module Scnnr
     end
 
     def recognize_image(image, options = {})
-      options = default_options.merge options
-      PollingManager.start(self, options) do |opts|
-        uri = construct_uri('recognitions', %i[timeout public], opts)
-        response = post_file(uri, image, opts)
-        Response.new(response).build_recognition
+      recognize(options) do |opts|
+        recognize_image_with_file(image, opts)
       end
     end
 
     def recognize_url(url, options = {})
-      options = default_options.merge options
-      PollingManager.start(self, options) do |opts|
-        uri = construct_uri('remote/recognitions', %i[timeout force], opts)
-        response = post(uri, { url: url }, opts)
-        Response.new(response).build_recognition
+      recognize(options) do |opts|
+        recognize_image_with_url(url, opts)
       end
     end
 
     def fetch(recognition_id, options = {})
       options = default_options.merge options
-      if options.delete(:polling) == false
-        uri = construct_uri("recognitions/#{recognition_id}", %i[timeout], options)
-        response = get(uri, options).send_request_with_retries
-        return Response.new(response).build_recognition
-      end
+      return get_recognition(recognition_id, options) if without_timeout?(options[:timeout])
 
-      PollingManager.new(options.delete(:timeout)).polling(self, recognition_id, options)
+      validate_timeout(options[:timeout])
+      timeout_at = Scnnr.PollingManager.timeout_at(options[:timeout])
+
+      recognize_poll(recognition_id, timeout_at, options)
     end
 
     def coordinate(category, labels, taste = {}, options = {})
@@ -60,6 +53,66 @@ module Scnnr
     end
 
     private
+
+    def recognize(options, &block)
+      options = default_options.merge options
+      return block.call(options) if without_timeout?(options[:timeout])
+
+      validate_timeout(options[:timeout])
+      timeout_at = Scnnr.PollingManager.timeout_at(options[:timeout])
+
+      result = recognize_start(timeout_at, options) do |opts|
+        block.call(opts)
+      end
+
+      return result unless result == :poll
+
+      recognize_poll(result.id, timeout_at, options)
+    end
+
+    def recognize_start(timeout_at, options = {}, &block)
+      Scnnr.PollingManager.start timeout_at do
+        timeout = Scnnr.PollingManager.calculate_timeout(timeout_at)
+        block.call(options.merge({ timeout: timeout }))
+      end
+    end
+
+    def recognize_poll(id, timeout_at, options = {})
+      Scnnr.PollingManager.poll timeout_at do
+        timeout = Scnnr.PollingManager.calculate_timeout(timeout_at)
+        get_recognition(id, options.merge({ timeout: timeout }))
+      end
+    end
+
+    def without_timeout?(timeout)
+      return true if timeout.nil? || timeout.zero?
+    end
+
+    def validate_timeout(timeout)
+      return if without_timeout?(timeout)
+      return if timeout.is_a?(Integer) && timeout.positive?
+      return if timeout.is_a?(Float::INFINITY)
+
+      raise ArgumentError, "timeout must be Integer or Float::INFINITY, but given: #{timeout}"
+    end
+
+    def get_recognition(recognition_id, options = {})
+      uri = construct_uri("recognitions/#{recognition_id}", %i[timeout], options)
+      response = get(uri, options).send_request_with_retries
+      Response.new(response).build_recognition
+    end
+
+    def recognize_image_with_file(file, options = {})
+      uri = construct_uri('recognitions', %i[timeout public], options)
+      response = post_file(uri, file, opts)
+      Response.new(response).build_recognition
+    end
+
+    def recognize_image_with_url(url, options = {})
+      uri = construct_uri('remote/recognitions', %i[timeout force], options)
+      response = post(uri, { url: url }, options)
+      Response.new(response).build_recognition
+    end
 
     def default_options
       self.config.to_h

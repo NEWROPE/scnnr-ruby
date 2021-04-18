@@ -22,6 +22,8 @@ group :test do
   gem 'rubocop-rspec', '~> 1.43.2'
 
   gem 'webmock', '~> 3.0'
+
+  gem 'timecop'
 end
 
 gemspec
