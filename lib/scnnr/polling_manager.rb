@@ -14,12 +14,13 @@ module Scnnr
     end
 
     def self.poll(id, timeout_at, &block)
+      block_value = nil
       Scnnr::Poller.poll(timeout_at) do
         block_value = block.call(id)
         block_value.finished? ? block_value : :re_poll
       end
-    rescue Scnnr::Poller::TimeoutError => e
-      raise Scnnr::TimeoutError.new('Polling timed out paitently', e.value)
+    rescue Scnnr::Poller::TimeoutError
+      raise Scnnr::TimeoutError.new('Polling timed out paitently', block_value)
     end
 
     def self.calculate_timeout(timeout_at)

@@ -47,9 +47,7 @@ RSpec.describe Scnnr::Poller do
       let(:block) { proc { unfinished_task } }
 
       it 'raises TimeoutError' do
-        expect { subject }.to raise_error(Scnnr::Poller::TimeoutError) do |e|
-          expect(e.value).to eq(block.call)
-        end
+        expect { subject }.to raise_error(Scnnr::Poller::TimeoutError)
       end
     end
   end

@@ -91,5 +91,19 @@ RSpec.describe Scnnr::PollingManager do
         end
       end
     end
+
+    context 'when is already timeout' do
+      let(:timeout_at) { before_now }
+
+      context 'and return unfinished task' do
+        let(:block) { proc { unfinished_task } }
+
+        it 'return unfinished task' do
+          expect { result }.to raise_error(Scnnr::TimeoutError) do |e|
+            expect(e.recognition).to eq(unfinished_task)
+          end
+        end
+      end
+    end
   end
 end
