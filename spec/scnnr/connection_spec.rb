@@ -10,8 +10,8 @@ RSpec.describe Scnnr::Connection do
   let(:api_key) { nil }
   let(:expected_body) { fixture('queued_recognition.json').read }
 
-  describe '#send_request' do
-    subject { connection.send_request }
+  describe '#send_request_with_retries' do
+    subject { connection.send_request_with_retries }
 
     let(:method) { %i[get post].sample }
 
@@ -35,7 +35,7 @@ RSpec.describe Scnnr::Connection do
     end
 
     context 'when passing block' do
-      subject { connection.send_request { |request| request.content_type = requested_content_type } }
+      subject { connection.send_request_with_retries { |request| request.content_type = requested_content_type } }
 
       let(:requested_content_type) { 'application/json' }
 

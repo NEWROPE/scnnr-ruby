@@ -2,40 +2,33 @@
 
 module Scnnr
   class PollingManager
-    MAX_TIMEOUT = 25
+    MAX_TIMEOUT_INTERVAL = 25
 
-    attr_accessor :timeout
+    def self.start(timeout_at, &block)
+      block_value = block.call
+      return block_value if block_value.finished?
 
-    def self.start(client, options, &block)
-      timeout = options.delete(:timeout)
-      used_timeout = [timeout, MAX_TIMEOUT].min
-      extra_timeout = timeout - used_timeout
+      raise TimeoutError.new('Polling timed out paitently', block_value) unless Time.now.utc < timeout_at
 
-      recognition = block.call(options.merge(timeout: used_timeout))
-      if recognition.queued? && extra_timeout.positive?
-        new(extra_timeout).polling(client, recognition.id, options)
-      else
-        recognition
-      end
+      :poll
     end
 
-    def initialize(timeout)
-      case timeout
-      when Integer, Float::INFINITY then @timeout = timeout
-      else
-        raise ArgumentError, "timeout must be Integer or Float::INFINITY, but given: #{timeout}"
+    def self.poll(id, timeout_at, &block)
+      Scnnr::Poller.poll(timeout_at) do
+        block_value = block.call(id)
+        block_value.finished? ? block_value : :re_poll
       end
+    rescue Scnnr::Poller::TimeoutError => e
+      raise Scnnr::TimeoutError.new('Polling timed out paitently', e.value)
     end
 
-    def polling(client, recognition_id, options = {})
-      loop do
-        timeout = [self.timeout, MAX_TIMEOUT].min
-        self.timeout -= timeout
-        recognition = client.fetch(recognition_id, options.merge(timeout: timeout, polling: false))
+    def self.calculate_timeout(timeout_at)
+      total_timeout = timeout_at - Time.now.utc
+      [total_timeout - MAX_TIMEOUT_INTERVAL].min
+    end
 
-        break recognition unless recognition.queued?
-        raise TimeoutError.new('recognition timed out', recognition) unless self.timeout.positive?
-      end
+    def self.timeout_at(timeout)
+      Time.now.utc + timeout
     end
   end
 end

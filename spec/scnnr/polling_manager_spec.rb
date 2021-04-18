@@ -3,156 +3,106 @@
 require 'spec_helper'
 
 RSpec.describe Scnnr::PollingManager do
-  let(:manager) { described_class.new(timeout) }
+  let(:now) { Time.local(2000, 1, 1, 0, 0, 0) }
+  let(:before_now) { now - 1 }
+  let(:after_now) { now + 1 }
+
+  let(:block) { proc { finished_task } }
+  let(:unfinished_task) { Scnnr::Recognition.new('state' => 'queued') }
+  let(:finished_task) { Scnnr::Recognition.new('state' => 'finished') }
+
+  before do
+    Timecop.freeze(now)
+  end
+
+  after do
+    Timecop.return
+  end
+
+  it 'is now' do
+    expect(Time.now.utc).to eq(now)
+  end
 
   describe '.start' do
-    subject(:result) { described_class.start(client, options, &block) }
+    subject(:result) { described_class.start(timeout_at, &block) }
 
-    let(:timeout) { Scnnr::PollingManager::MAX_TIMEOUT * 3 }
-    let(:client) { instance_double(Scnnr::Client) }
-    let(:options) { { api_key: 'test', timeout: timeout, public: true } }
-    let(:block) { proc { finished_recognition } }
+    context 'when before timeout' do
+      let(:timeout_at) { after_now }
 
-    let(:queued_recognition) { Scnnr::Recognition.new('state' => 'queued') }
-    let(:finished_recognition) { Scnnr::Recognition.new('state' => 'finished') }
+      context 'and return finished task' do
+        let(:block) { proc { finished_task } }
 
-    it 'passes the max timeout and other options to the block' do
-      expect(block).to receive(:call).with({
-        api_key: 'test', timeout: Scnnr::PollingManager::MAX_TIMEOUT, public: true
-      }).and_return(finished_recognition)
+        it 'returns finished task' do
+          expect(result).to eq(finished_task)
+        end
+      end
 
-      result
-    end
+      context 'and return unfinished task' do
+        let(:block) { proc { unfinished_task } }
 
-    context 'when the block returns a finished recognition' do
-      let(:block) { proc { finished_recognition } }
-
-      it 'immediately returns the recognition' do
-        expect(client).not_to receive(:fetch)
-        expect(subject).to eq finished_recognition
+        it 'returns :poll' do
+          expect(result).to eq(:poll)
+        end
       end
     end
 
-    context 'when the first fetch attempt finishes' do
-      let(:block) { proc { queued_recognition } }
+    context 'when is already timeout' do
+      let(:timeout_at) { before_now }
 
-      it 'returns the finished recognition' do
-        expect(client).to receive(:fetch).with(
-          queued_recognition.id, hash_including(polling: false, timeout: Scnnr::PollingManager::MAX_TIMEOUT)
-        ).and_return(finished_recognition)
-        expect(subject).to eq finished_recognition
+      context 'and return unfinished task' do
+        let(:block) { proc { unfinished_task } }
+
+        it 'raises TimeoutError' do
+          expect { subject }.to raise_error(Scnnr::TimeoutError) do |e|
+            expect(e.recognition).to eq unfinished_task
+          end
+        end
       end
-    end
 
-    context 'when the timeout is exceeded' do
-      let(:block) { proc { queued_recognition } }
+      context 'and return finished task' do
+        let(:block) { proc { finished_task } }
 
-      it 'times out with the queued recognition' do
-        expect(client).to receive(:fetch).with(
-          queued_recognition.id, hash_including(polling: false, timeout: Scnnr::PollingManager::MAX_TIMEOUT)
-        ).twice.and_return(queued_recognition)
-
-        expect { subject }.to raise_error(Scnnr::TimeoutError) do |e|
-          expect(e.recognition).to eq queued_recognition
+        it 'returns finished task' do
+          expect(result).to eq finished_task
         end
       end
     end
   end
 
-  describe '#polling' do
-    subject { manager.polling(client, recognition_id, options) }
+  describe '.poll' do
+    subject(:result) { described_class.poll('id', timeout_at, &block) }
 
-    let(:client) { Scnnr::Client.new }
-    let(:recognition_id) { 'dummy_id' }
-    let(:options) { {} }
+    context 'when before timeout' do
+      let(:timeout_at) { after_now }
 
-    context 'when timeout is 0' do
-      let(:timeout) { 0 }
+      context 'and return finished task' do
+        let(:block) { proc { finished_task } }
 
-      context 'and finished recognition returns' do
-        let(:recognition) { Scnnr::Recognition.new('state' => 'finished') }
-
-        it do
-          expect(client).to(receive(:fetch).with(recognition_id, hash_including(timeout: anything, polling: false))
-            .once { recognition })
-          expect { subject }.not_to change(manager, :timeout)
+        it 'return finished task' do
+          expect(result).to eq(finished_task)
         end
       end
 
-      context 'and not finished recognition returns' do
-        let(:recognition) { Scnnr::Recognition.new }
+      context 'and return finished task or unfinished task' do
+        let(:block) { proc { [finished_task, unfinished_task].sample } }
 
-        it do
-          expect(client).to(receive(:fetch).with(recognition_id, hash_including(timeout: anything, polling: false))
-            .once { recognition })
-          expect { subject }.not_to change(manager, :timeout)
+        it 'return :re_poll or unfinished task' do
+          expect([finished_task, :re_poll]).to include(:re_poll)
         end
       end
     end
 
-    context 'when timeout is greater than 0' do
-      let(:timeout) { rand(1..100) }
+    context 'when is already timeout' do
+      let(:timeout_at) { before_now }
 
-      context 'and finished recognition returns' do
-        let(:recognition) { Scnnr::Recognition.new('state' => 'finished') }
+      context 'and return finished task' do
+        let(:block) { proc { unfinished_task } }
 
-        it do
-          expect(client).to(receive(:fetch).with(recognition_id, hash_including(timeout: anything, polling: false))
-            .once { recognition })
-          expect { subject }.to change(manager, :timeout)
-            .from(timeout).to([timeout - Scnnr::PollingManager::MAX_TIMEOUT, 0].max)
-          expect(subject).to eq recognition
-        end
-      end
-
-      context 'and finished recognition fails' do
-        let(:recognition) { Scnnr::Recognition.new('state' => 'error') }
-
-        it do
-          expect(client).to(receive(:fetch).with(recognition_id, hash_including(timeout: anything, polling: false))
-            .once { recognition })
-          expect { subject }.to change(manager, :timeout)
-            .from(timeout).to([timeout - Scnnr::PollingManager::MAX_TIMEOUT, 0].max)
-          expect(subject).to eq recognition
-        end
-      end
-
-      context 'and not finished recognition returns' do
-        let(:recognition) { Scnnr::Recognition.new('state' => 'queued') }
-        let(:times) { (Float(timeout) / Scnnr::PollingManager::MAX_TIMEOUT).ceil }
-
-        it do
-          expect(client).to(receive(:fetch).with(recognition_id, hash_including(timeout: anything, polling: false))
-            .exactly(times).times { recognition })
-
-          expect { subject }.to raise_error(Scnnr::TimeoutError) do |e|
-            expect(e.recognition).to eq recognition
+        it 'return finished task' do
+          expect { result }.to raise_error(Scnnr::TimeoutError) do |e|
+            expect(e.recognition).to eq(unfinished_task)
           end
         end
-      end
-    end
-
-    context 'when timeout is Float::INFINITY' do
-      context 'and finished recognition returns' do
-        let(:recognition) { Scnnr::Recognition.new('state' => 'finished') }
-        let(:timeout) { Float::INFINITY }
-
-        it do
-          expect(client).to(receive(:fetch).with(recognition_id, hash_including(timeout: anything, polling: false))
-            .once { recognition })
-          expect { subject }.not_to change(manager, :timeout)
-        end
-      end
-    end
-
-    context 'when timeout is neither Integer nor Float::INFINITY' do
-      let(:recognition) { nil }
-      let(:timeout) { nil }
-
-      it do
-        expect(client).to(receive(:fetch).with(recognition_id, hash_including(timeout: anything, polling: false))
-          .exactly(0).times { recognition })
-        expect { subject }.to raise_error(ArgumentError)
       end
     end
   end
