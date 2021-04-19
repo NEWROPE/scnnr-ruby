@@ -85,7 +85,7 @@ module Scnnr
     end
 
     def without_timeout?(timeout)
-      return true if timeout.nil? || timeout.zero?
+      timeout.nil? || timeout.zero?
     end
 
     def validate_timeout(timeout)
